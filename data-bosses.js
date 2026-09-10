@@ -277,8 +277,8 @@ export const BOSSES = [
     afterLevel: 14,          // Fecha o mundo "Fortaleza da Proteção Digital" (Níveis 10-15 —
                              // dispositivos, família, wi-fi, backups, acessibilidade, spam).
     name: "Robô do Spam",
-    emoji: "🏭",
-    color: 0x7a8a5c,
+    emoji: "📮",
+    color: 0xc7291f,
     // Mesma conversão para stompBoss — mantém a patrulha rápida (sensação
     // industrial) mas larga as plataformas móveis e a arena poluída, para
     // caber num único ecrã sem scroll, tal como os outros 3 bosses.
@@ -293,8 +293,8 @@ export const BOSSES = [
     patrolSpeed: 150,        // mais rápido — sensação industrial
     hopEvery: 2000,
     qmarkEvery: 2000,
-    orbTexture: "boss_proj_bolt", // parafuso/porca dourada próprio — antes reutilizava a bola "?" do Monstro, sem sentido temático para uma fábrica
-    orbTint: 0xffd700,       // dourado, a condizer com as engrenagens
+    orbTexture: "boss_proj_spam", // envelope de spam com selo de aviso vermelho — o robô atira correio, não parafusos
+    orbTint: 0xffffff,       // sem tint — o envelope já tem as suas próprias cores (branco/vermelho)
     // bossY: o Poluidor é uma caixa mecânica larga mas mais baixa que os
     // outros — medi o pixel mais baixo do corpo (~26px abaixo do centro do
     // canvas, bem menos que os outros porque não tem "cabeça" alta, só caixa

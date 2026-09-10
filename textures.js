@@ -1089,31 +1089,37 @@ function makeBossTextures(scene){
   // como convém a um robô industrial pesado.
   function drawPoluidorBody(ctx){
     bossShadow(ctx);
-    // envelopes de spam a sair da chaminé (em vez de fumo industrial) —
+    // envelopes de spam a transbordar da tampa da caixa de correio —
     // identifica-o de imediato como o Robô do Spam.
-    [[C-2,C-46,0.5],[C+5,C-58,0.42],[C-6,C-70,0.32]].forEach(([x,y,a])=>{
-      ctx.save(); ctx.globalAlpha=a; ctx.translate(x,y); ctx.rotate((x%5)*0.08);
+    [[C-2,C-40,0.5],[C+6,C-49,0.42],[C-7,C-58,0.32]].forEach(([x,y,a])=>{
+      ctx.save(); ctx.globalAlpha=a; ctx.translate(x,y); ctx.rotate((x%5)*0.1);
       ctx.fillStyle="#fffaff";
       ctx.beginPath(); ctx.roundRect(-7,-5,14,10,1.5); ctx.fill();
-      ctx.strokeStyle="#c04040"; ctx.lineWidth=1; ctx.stroke();
+      ctx.strokeStyle="#d43a2f"; ctx.lineWidth=1; ctx.stroke();
       ctx.beginPath(); ctx.moveTo(-7,-5); ctx.lineTo(0,1); ctx.lineTo(7,-5); ctx.stroke();
       ctx.restore();
     });
-    // chaminé com aro no topo
-    ctx.fillStyle="#5a5a4a";
-    ctx.fillRect(C-6,C-40,12,20);
-    ctx.strokeStyle="#2a2a20"; ctx.lineWidth=1.5; ctx.strokeRect(C-6,C-40,12,20);
-    ctx.fillStyle="#3a3a2e"; ctx.fillRect(C-8,C-42,16,4);
-    // corpo — caixa metálica, gradiente oliva/ferrugem com mais contraste
+    // tampa da caixa de correio — telhadinho vermelho inclinado no topo,
+    // com o envelope branco gravado, como uma caixa de correio gigante.
+    ctx.fillStyle="#c72a20";
+    ctx.beginPath();
+    ctx.moveTo(C-19,C-30); ctx.lineTo(C+19,C-30); ctx.lineTo(C+14,C-42); ctx.lineTo(C-14,C-42);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#7a140e"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#fffaff";
+    ctx.beginPath(); ctx.roundRect(C-8,C-39,16,7,1); ctx.fill();
+    // fresta escura por baixo da tampa (a "boca" por onde sai o spam)
+    ctx.fillStyle="#3a0a06"; ctx.fillRect(C-16,C-31,32,4);
+    // corpo — caixa metálica, gradiente vermelho vivo com mais contraste
     const gr=ctx.createLinearGradient(C-30,C-22,C+30,C+26);
-    gr.addColorStop(0,"#a8b686"); gr.addColorStop(0.5,"#7a8a5c"); gr.addColorStop(1,"#4a5432");
+    gr.addColorStop(0,"#e8564a"); gr.addColorStop(0.5,"#c7291f"); gr.addColorStop(1,"#7a140e");
     ctx.fillStyle=gr;
-    rrPath(ctx,C-30,C-22,60,44,8); ctx.fill();
-    ctx.strokeStyle="#2a2e1c"; ctx.lineWidth=2.5; ctx.stroke();
-    // faixa de perigo amarela/preta — nova, ao longo da base do corpo
+    rrPath(ctx,C-30,C-22,60,44,4); ctx.fill();
+    ctx.strokeStyle="#4a0d08"; ctx.lineWidth=2.5; ctx.stroke();
+    // faixa de perigo amarela/preta — ao longo da base do corpo
     ctx.save();
     rrPath(ctx,C-30,C+10,60,12,3); ctx.clip();
-    ctx.fillStyle="#22241a"; ctx.fillRect(C-30,C+10,60,12);
+    ctx.fillStyle="#1c1c1c"; ctx.fillRect(C-30,C+10,60,12);
     ctx.fillStyle="#e8c73c";
     for(let x=-36;x<40;x+=10){
       ctx.save(); ctx.translate(C+x,C+16); ctx.rotate(Math.PI/4);
@@ -1121,20 +1127,25 @@ function makeBossTextures(scene){
       ctx.restore();
     }
     ctx.restore();
-    // manchas de ferrugem — decorativas, baixa opacidade
-    ctx.fillStyle="rgba(120,60,20,0.35)";
+    // riscos/amolgadelas — decorativos, baixa opacidade (em vez de ferrugem,
+    // que não fazia sentido num robô vermelho novo)
+    ctx.fillStyle="rgba(30,10,8,0.3)";
     [[C-23,C-12,5],[C+21,C+2,4],[C-15,C+1,3]].forEach(([x,y,r])=>{
       ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
     });
     // rebites
-    ctx.fillStyle="#2f3320";
+    ctx.fillStyle="#3a0d08";
     [[-25,-17],[25,-17],[-25,-3],[25,-3]].forEach(([dx,dy])=>{
       ctx.beginPath(); ctx.arc(C+dx,C+dy,2.2,0,Math.PI*2); ctx.fill();
     });
-    // engrenagens nos ombros
+    // ombros — anel azul (pauldron) por trás da engrenagem, a condizer
+    // com a junta azul dos braços na imagem de referência
     [[-30,-4],[30,-4]].forEach(([dx,dy])=>{
       const gx=C+dx, gy=C+dy;
-      ctx.fillStyle="#4a4a3a";
+      ctx.fillStyle="#2c5aa0";
+      ctx.beginPath(); ctx.arc(gx,gy,10,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle="#1c3a6a"; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle="#38383e";
       for(let i=0;i<8;i++){
         const a=(Math.PI*2*i)/8;
         ctx.save(); ctx.translate(gx,gy); ctx.rotate(a);
@@ -1142,43 +1153,82 @@ function makeBossTextures(scene){
         ctx.restore();
       }
       ctx.beginPath(); ctx.arc(gx,gy,7,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle="#8a8a70"; ctx.beginPath(); ctx.arc(gx,gy,3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#c7291f"; ctx.beginPath(); ctx.arc(gx,gy,3,0,Math.PI*2); ctx.fill();
     });
-    // base de lagartas/rodas — deixa de parecer que flutua
-    ctx.fillStyle="#22241a";
-    rrPath(ctx,C-28,C+22,56,13,4); ctx.fill();
-    ctx.strokeStyle="#12130d"; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle="#4a4a3a";
+    // base com propulsores azuis — deixa de parecer que flutua
+    ctx.fillStyle="#1c1c22";
+    rrPath(ctx,C-28,C+22,56,13,3); ctx.fill();
+    ctx.strokeStyle="#0e0e12"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#2c5aa0";
     [-20,-7,7,20].forEach(dx=>{
       ctx.beginPath(); ctx.arc(C+dx,C+28,4.2,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle="#7a7a64"; ctx.beginPath(); ctx.arc(C+dx,C+28,1.6,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle="#4a4a3a";
+      ctx.fillStyle="#ff4030"; ctx.beginPath(); ctx.arc(C+dx,C+28,1.6,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#2c5aa0";
     });
-    // visor — painel escuro embutido onde entram os olhos+sobrancelhas+boca
-    ctx.fillStyle="#1c1e14";
-    rrPath(ctx,C-23,C-19,46,30,5); ctx.fill();
+    // visor — painel escuro só para os olhos (sem grelha de boca, como na
+    // imagem de referência: só duas fendas a brilhar no preto)
+    ctx.fillStyle="#12100e";
+    rrPath(ctx,C-23,C-19,46,17,3); ctx.fill();
     ctx.strokeStyle="#0e0f0a"; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle="#4a4a3a";
-    [[-20,-16],[20,-16],[-20,8],[20,8]].forEach(([dx,dy])=>{
-      ctx.beginPath(); ctx.arc(C+dx,C+dy,1.6,0,Math.PI*2); ctx.fill();
+    // ventilação — 4 riscas finas acima dos olhos, como na imagem
+    ctx.strokeStyle="#38383e"; ctx.lineWidth=1.4;
+    for(let i=0;i<4;i++){ const x=C-6+i*4; ctx.beginPath(); ctx.moveTo(x,C-16); ctx.lineTo(x,C-13); ctx.stroke(); }
+    // compartimento inferior — grelha metálica com o correio-lixo lá dentro
+    // à vista, tal como o "porão" cheio de envelopes da imagem de referência
+    ctx.fillStyle="#4a4a52";
+    rrPath(ctx,C-23,C-1,46,13,3); ctx.fill();
+    ctx.strokeStyle="#242428"; ctx.lineWidth=2; ctx.stroke();
+    ctx.save();
+    rrPath(ctx,C-20,C+1.5,40,8,2); ctx.clip();
+    ctx.fillStyle="#1c1a1a"; ctx.fillRect(C-20,C+1.5,40,8);
+    const envColors=["#e8352a","#fffaff","#2c5aa0","#fffaff","#e8352a","#2c5aa0"];
+    envColors.forEach((col,i)=>{
+      ctx.save();
+      ctx.translate(C-17+i*7, C+5.5+((i%2)?1.5:-1));
+      ctx.rotate((i%2?1:-1)*0.25);
+      ctx.fillStyle=col; ctx.fillRect(-3.2,-2.6,6.4,5.2);
+      ctx.restore();
     });
+    ctx.restore();
+    ctx.fillStyle="#26262c";
+    [[-19,2.5],[19,2.5],[-19,10],[19,10]].forEach(([dx,dy])=>{
+      ctx.beginPath(); ctx.arc(C+dx,C+dy,1.5,0,Math.PI*2); ctx.fill();
+    });
+    // triângulo de aviso — pequeno pormenor amarelo/preto no peito, do
+    // lado esquerdo, como na imagem
+    ctx.save(); ctx.translate(C-27,C-4);
+    ctx.fillStyle="#e8c73c";
+    ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(4.5,4); ctx.lineTo(-4.5,4); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle="#1c1c1c";
+    ctx.fillRect(-0.6,-2,1.2,4.5); ctx.beginPath(); ctx.arc(0,3.3,0.9,0,Math.PI*2); ctx.fill();
+    ctx.restore();
   }
-  // Braços-garra mecânicos — "wave" levantados/abertos (a ameaçar), "rest"
-  // pousados ao longo do corpo.
+  // Braços-garra mecânicos — metal escuro (gunmetal) com juntas vermelhas,
+  // a condizer com as engrenagens dos ombros. Compridos e com garra bem
+  // aberta, para lerem como "prestes a agarrar/atirar". "wave" levantados
+  // (a ameaçar), "rest" pousados ao longo do corpo.
   function drawPoluidorArms(ctx, mood){
-    ctx.fillStyle="#7a8a5c"; ctx.strokeStyle="#3a4028"; ctx.lineWidth=2.5;
+    ctx.fillStyle="#3a3a42"; ctx.strokeStyle="#18181c"; ctx.lineWidth=2.5;
     if (mood === "wave") {
       [-1,1].forEach(side=>{
         const sx=C+side*30, sy=C-4;
-        ctx.beginPath(); ctx.ellipse(sx+side*11, sy-15, 7,14, side*0.45,0,Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(sx+side*15, sy-27); ctx.lineTo(sx+side*24, sy-33); ctx.lineTo(sx+side*17, sy-23); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(sx+side*15, sy-21); ctx.lineTo(sx+side*25, sy-21); ctx.lineTo(sx+side*17, sy-15); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(sx+side*13, sy-19, 8,17, side*0.45,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        // garra — três dedos bem abertos, mais compridos que antes
+        ctx.beginPath(); ctx.moveTo(sx+side*18, sy-34); ctx.lineTo(sx+side*30, sy-42); ctx.lineTo(sx+side*20, sy-28); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sx+side*18, sy-26); ctx.lineTo(sx+side*31, sy-25); ctx.lineTo(sx+side*20, sy-18); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sx+side*16, sy-19); ctx.lineTo(sx+side*27, sy-13); ctx.lineTo(sx+side*17, sy-10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // junta vermelha luminosa no ombro
+        ctx.fillStyle="#ff4030"; ctx.beginPath(); ctx.arc(sx+side*2, sy-8, 3.4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle="#3a3a42";
       });
     } else {
       [-1,1].forEach(side=>{
         const sx=C+side*30, sy=C-4;
-        ctx.beginPath(); ctx.ellipse(sx+side*7, sy+16, 7,14, -side*0.28,0,Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx+side*11, sy+31, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(sx+side*8, sy+18, 8,17, -side*0.28,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(sx+side*13, sy+36, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#ff4030"; ctx.beginPath(); ctx.arc(sx+side*2, sy+2, 3.4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle="#3a3a42";
       });
     }
   }
@@ -1201,10 +1251,11 @@ function makeBossTextures(scene){
     ctx.fillStyle="#4a4a3a";
     [-14,14].forEach(dx=>{ ctx.beginPath(); ctx.arc(C+dx,VT-6,2,0,Math.PI*2); ctx.fill(); });
   }
-  // Duas lentes (em vez de um LED central só) — cor/tamanho variam por
-  // estado. "blink" fecha-as como um obturador mecânico.
+  // Duas fendas angulares (em vez de lentes redondas) — olhar afiado e
+  // hostil, como um triângulo de aviso vivo. Tamanho/cor variam por estado.
+  // "blink" fecha-as como um obturador mecânico.
   function drawPoluidorEyes(ctx, mood){
-    const pos=[[-10,-6],[10,-6]];
+    const pos=[[-10,-9],[10,-9]];
     if (mood==="blink"){
       ctx.strokeStyle="#ff4030"; ctx.lineWidth=2.5; ctx.lineCap="round";
       ctx.shadowColor="#ff4030"; ctx.shadowBlur=5;
@@ -1212,53 +1263,32 @@ function makeBossTextures(scene){
       ctx.shadowBlur=0;
       return;
     }
-    let r=5.5, color="#ff4030", dyAdj=0;
-    if (mood==="angry"){ r=6.5; color="#ff2010"; }
-    if (mood==="laugh"){ r=5;   color="#ff6030"; }
-    if (mood==="ouch"){  r=7;   color="#ffffff"; }
-    if (mood==="sad"){   r=4;   color="#ff8070"; dyAdj=3; }
-    pos.forEach(([dx,dy])=>{ glowEye(ctx, C+dx, C+dy+dyAdj, r, color); });
-  }
-  // Boca-grelha — a peça que mais muda de FORMA (não só de cor) entre
-  // estados, para as expressões ficarem mesmo "vincadas": grelha reta
-  // (normal), grelha larga e aberta a rir (laugh), fenda descaída (sad),
-  // grelha em zigue-zague cerrada (angry), grelha ovalada bem aberta em
-  // choque (ouch).
-  function drawPoluidorMouth(ctx, mood){
-    const cy=C+1; // dentro do visor (que vai até C+11) — antes ultrapassava a borda de baixo
-    if (mood==="laugh"){
-      ctx.fillStyle="#12130d"; ctx.strokeStyle="#0e0f0a"; ctx.lineWidth=1.5;
+    let s=1, color="#ff4030", dyAdj=0;
+    if (mood==="angry"){ s=1.2; color="#ff2010"; }
+    if (mood==="laugh"){ s=0.9; color="#ff6030"; }
+    if (mood==="ouch"){  s=1.3; color="#ffffff"; }
+    if (mood==="sad"){   s=0.8; color="#ff8070"; dyAdj=3; }
+    pos.forEach(([dx,dy],i)=>{
+      const side = i===0 ? -1 : 1;
+      const ex=C+dx, ey=C+dy+dyAdj;
+      ctx.save();
+      ctx.shadowColor=color; ctx.shadowBlur=7;
+      ctx.fillStyle=color;
       ctx.beginPath();
-      ctx.moveTo(C-15,cy-3); ctx.quadraticCurveTo(C, cy+7, C+15, cy-3);
-      ctx.quadraticCurveTo(C, cy+1, C-15, cy-3);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle="#ffe85c"; ctx.lineWidth=1.2;
-      for(let i=0;i<2;i++){ ctx.beginPath(); ctx.moveTo(C-9,cy+i*2.2); ctx.lineTo(C+9,cy+i*2.2); ctx.stroke(); }
-    } else if (mood==="sad"){
-      ctx.strokeStyle="#3a4028"; ctx.lineWidth=2.5; ctx.lineCap="round";
-      ctx.beginPath(); ctx.moveTo(C-10,cy+3); ctx.quadraticCurveTo(C, cy-5, C+10, cy+3); ctx.stroke();
-    } else if (mood==="angry"){
-      ctx.strokeStyle="#0e0f0a"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.lineJoin="round";
-      ctx.beginPath();
-      ctx.moveTo(C-13,cy-1);
-      for(let i=0;i<4;i++){ ctx.lineTo(C-13+(i+1)*6.5, cy-1+(i%2===0?4:-4)); }
-      ctx.stroke();
-    } else if (mood==="ouch"){
-      ctx.fillStyle="#0e0f0a";
-      ctx.beginPath(); ctx.ellipse(C,cy+1,6.5,6.5,0,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle="#ffe85c"; ctx.lineWidth=1.2;
-      ctx.beginPath(); ctx.moveTo(C-4,cy+1); ctx.lineTo(C+4,cy+1); ctx.stroke();
-    } else {
-      ctx.strokeStyle="#12130d"; ctx.lineWidth=2;
-      for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(C-9,cy-4+i*3.4); ctx.lineTo(C+9,cy-4+i*3.4); ctx.stroke(); }
-    }
+      ctx.moveTo(ex-side*7*s, ey);
+      ctx.lineTo(ex, ey-5*s);
+      ctx.lineTo(ex+side*7*s, ey+1.5*s);
+      ctx.lineTo(ex, ey+5*s);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    });
   }
-  // Reúne sobrancelhas + olhos + boca — um só ponto de entrada por estado,
-  // reaproveitado pelos 7 blocos de textura abaixo.
+  // Reúne sobrancelhas + olhos — um só ponto de entrada por estado,
+  // reaproveitado pelos 7 blocos de textura abaixo. Sem boca-grelha: a
+  // imagem de referência só tem os olhos a brilhar no visor preto.
   function drawPoluidorFace(ctx, mood){
     drawPoluidorBrow(ctx, mood);
     drawPoluidorEyes(ctx, mood);
-    drawPoluidorMouth(ctx, mood);
   }
   if(!scene.textures.exists("boss_robo_spam")){
     const tex=scene.textures.createCanvas("boss_robo_spam",S,S), ctx=tex.getContext();
@@ -1425,25 +1455,34 @@ function makeBossTextures(scene){
     tex.refresh();
   }
 
-  // ── Faísca/parafuso do Poluidor Mecânico — pequena porca dourada com
-  // brilho, sem símbolo — tema industrial em vez de "perigo desconhecido".
-  if(!scene.textures.exists("boss_proj_bolt")){
-    const w=30,h=30,tex=scene.textures.createCanvas("boss_proj_bolt",w,h), ctx=tex.getContext();
-    const cx=w/2, cy=h/2, r=9;
-    const gr=ctx.createRadialGradient(cx-3,cy-3,1,cx,cy,r+3);
-    gr.addColorStop(0,"#fffef0"); gr.addColorStop(0.6,"#f0ecc8"); gr.addColorStop(1,"#c8bc80");
-    ctx.fillStyle=gr;
-    // hexágono (porca)
+  // ── Envelope de spam do Robô do Spam — envelope branco com dobra e
+  // selo vermelho de aviso (⚠), tal como os que o robô atira/cospe —
+  // troca a porca dourada (tema industrial genérico) por algo que se lê
+  // de imediato como "correio indesejado a ser atirado".
+  if(!scene.textures.exists("boss_proj_spam")){
+    const w=32,h=24,tex=scene.textures.createCanvas("boss_proj_spam",w,h), ctx=tex.getContext();
+    ctx.shadowColor="rgba(220,40,30,0.6)"; ctx.shadowBlur=6;
+    // corpo do envelope
+    ctx.fillStyle="#fffaff";
+    ctx.beginPath(); ctx.roundRect(1,1,w-2,h-2,3); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle="#c7291f"; ctx.lineWidth=1.8; ctx.stroke();
+    // dobra em V
     ctx.beginPath();
-    for(let i=0;i<6;i++){
-      const a=(Math.PI*2*i)/6 - Math.PI/2;
-      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle="#8a7a30"; ctx.lineWidth=1.6; ctx.stroke();
-    ctx.fillStyle="#8a7a30";
-    ctx.beginPath(); ctx.arc(cx,cy,3.2,0,Math.PI*2); ctx.fill();
+    ctx.moveTo(1,1); ctx.lineTo(w/2,h*0.6); ctx.lineTo(w-1,1);
+    ctx.stroke();
+    // linhas finas de "texto" — só para dar textura de carta
+    ctx.strokeStyle="#e0b8b4"; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(5,h-6); ctx.lineTo(13,h-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w-13,h-6); ctx.lineTo(w-5,h-6); ctx.stroke();
+    // selo de aviso — círculo vermelho com "!" branco, no canto
+    const bx=w-8, by=8, br=6.5;
+    ctx.fillStyle="#e8352a";
+    ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#7a140e"; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.fillStyle="#fffaff";
+    ctx.fillRect(bx-1,by-3.5,2,4.5);
+    ctx.beginPath(); ctx.arc(bx,by+3,1.1,0,Math.PI*2); ctx.fill();
     tex.refresh();
   }
 }
