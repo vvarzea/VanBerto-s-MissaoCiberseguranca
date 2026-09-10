@@ -247,7 +247,10 @@ export const BOSSES = [
     signX: 220,
     intro: "Nas sombras, ninguém vê os teus dados a desaparecer!",
     defeatLine: "A tua privacidade... venceu-me!",
-    quizTheme: "contacto_desconhecidos",
+    quizTheme: "direitos_digitais", // CORRIGIDO: estava "contacto_desconhecidos" (tema do
+                              // Nível 19), por isso a pergunta do boss não coincidia com a
+                              // pergunta que já tinha fechado o Nível 20 — pareciam duas
+                              // perguntas a mais/desencontradas em vez de reforçarem o mesmo tema.
     hp: 3,                     // 4→3: agora são sempre 3 saltos na cabeça
     // themeIdx próprio removido — ver comentário igual no boss do phishing.
     rightRecovered: { emoji: "🔐", name: "Privacidade Protegida" },
