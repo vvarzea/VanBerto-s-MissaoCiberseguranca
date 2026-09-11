@@ -227,7 +227,13 @@ export const BOSSES = [
                               // em goToNextLevel) e mostra o ecrã de vitória final.
     name: "Espião das Sombras",
     emoji: "🌑",
-    color: 0x3a3a5c,
+    // Cor alinhada com o redesenho "feiticeiro-espião" (ver makeBossTextures
+    // em textures.js, secção 3) — antes era um cinzento-arroxeado neutro
+    // (0x3a3a5c) da capa lisa antiga; agora é o mesmo magenta do brilho da
+    // cara/garras/capuz do novo boss. Mesma família visual do Monstro do
+    // Phishing (que usa ciano), só que este é magenta — reforça que os dois
+    // partilham a mesma "receita" de design.
+    color: 0xff4fe6,
     // Mesma conversão para stompBoss — mantém o teletransporte entre 3
     // pontos (agora sempre à altura do chão, ver bossY/doBossTeleport em
     // dia-crianca.js) como a sua marca própria, mais difícil de apanhar
@@ -252,11 +258,18 @@ export const BOSSES = [
     // startBossFinalStandBurst em dia-crianca.js). Um pequeno clímax visual
     // para o combate final, sem tocar no hp nem na dificuldade geral.
     finalStandBurst: true,
-    // bossY: o Guardião é uma capa/robe sem pernas — medi o pixel mais baixo
-    // da bainha (~43px abaixo do centro do canvas). 506 - 43*1.5 = 442.
-    bossY: 442,
+    // bossY: recalculado com o redesenho "feiticeiro-espião" (ver
+    // makeBossTextures em textures.js) — a capa/robe antiga não tinha
+    // pernas (bainha a ~43px abaixo do centro); agora tem botas, tal como
+    // o Monstro do Phishing, com os pés exactamente na mesma posição
+    // (~49px abaixo do centro × bossScale 1.5 ≈ 73,5 → 506-73,5≈433).
+    bossY: 433,
     bossScale: 1.5,
-    hpBarOffset: 82,
+    // hpBarOffset: também recalculado — o capuz agora chega quase ao topo
+    // da tela (116px), tal como o chapéu do Monstro do Phishing, por isso
+    // usa a mesma folga (96) em vez do valor antigo (82, medido para a
+    // capa lisa sem capuz alto).
+    hpBarOffset: 96,
     signY: 486,
     // signX: centro da plataforma baixa esquerda (x=220, ver arena.platforms
     // abaixo) — mesma lógica dos outros bosses (ver comentário no Monstro

@@ -1155,151 +1155,386 @@ function makeBossTextures(scene){
     tex.refresh();
   }
 
-  // ── 3) Guardião das Sombras — capa encapuzada, olhos a brilhar ──────
-  function drawGuardiaoBody(ctx){
-    bossShadow(ctx);
-    // capa — forma triangular com bainha irregular em baixo
-    const gr=ctx.createLinearGradient(0,C-40,0,S-16);
-    gr.addColorStop(0,"#4a4a72"); gr.addColorStop(0.5,"#2a2a48"); gr.addColorStop(1,"#0e0e1c");
-    ctx.fillStyle=gr;
-    ctx.beginPath();
-    ctx.moveTo(C,C-40);
-    ctx.lineTo(C+30,C+24);
-    ctx.lineTo(C+22,C+22); ctx.lineTo(C+14,S-16); ctx.lineTo(C+5,C+26);
-    ctx.lineTo(C-5,C+26); ctx.lineTo(C-14,S-16); ctx.lineTo(C-22,C+22);
-    ctx.lineTo(C-30,C+24);
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle="#000"; ctx.lineWidth=2; ctx.stroke();
-    // Melhoria de leitura (pedido: "melhora a imagem dos bosses") — antes
-    // a capa era só um triângulo escuro liso, difícil de destacar do fundo
-    // também escuro deste nível. Duas camadas novas, sem mudar a silhueta:
-    // 1) brilho de contorno ciano ténue à volta de toda a capa, ecoando a
-    // cor dos olhos, para se destacar de fundos escuros;
+  // ── 3) Espião das Sombras — redesenho "feiticeiro-espião" (pedido:
+  // aproximar a aparência de uma segunda ilustração de referência fornecida
+  // pelo Berto, desta vez para o boss final) ──────────────────────────────
+  // Versão anterior: uma capa/robe lisa cinzento-arroxeada, sem pernas, só
+  // com dois olhos ciano a brilhar dentro do capuz — lê-se bem mas não tem
+  // nenhuma ligação de família com o resto do elenco (Monstro do Phishing,
+  // ver secção 1 acima). Nova versão: usa exactamente a mesma "receita" do
+  // Monstro do Phishing (cabeça-ecrã com cara maléfica + capuz/chapéu por
+  // cima + garra articulada + botas) para os dois lerem como a mesma
+  // família de bosses, mas em roxo-magenta em vez de azul-ciano, com capuz
+  // de feiticeiro em vez de chapéu de pirata, um olho-que-tudo-vê bordado
+  // no capuz, uma pequena gola com outro olho por baixo do ecrã, um
+  // "coletor de dados" no peito (a mochila do espião) e, o mais importante,
+  // GARRAS NOS DOIS BRAÇOS em vez de garra+cana — é o boss final, por isso
+  // fica mais ameaçador que o Monstro do Phishing (que só tinha uma garra).
+  // Continua "stompBoss" com entranceMaterialize/teleport — só a pele muda.
+  //
+  // Paleta própria (SH), irmã da paleta PH do Monstro do Phishing mas em
+  // tons roxo-magenta em vez de azul-ciano — reforça que são a mesma
+  // "família visual" de bosses sem serem iguais.
+  const SH = {
+    cloakDark:  "#120a26",
+    cloakMid:   "#241246",
+    cloakLight: "#402070",
+    glow:       "#ff4fe6",
+    glow2:      "#c86bff",
+    screenBg:   "#0c0718",
+    frame:      "#8a7aad",
+    frameDark:  "#4a3d6e",
+    belt:       "#2c2245",
+    buckle:     "#7a6a98",
+    claw:       "#1c0f38",
+    clawGlow:   "#ff4fe6",
+    hatDark:    "#0e0820",
+    panel:      "#180d30"
+  };
+
+  // Uma "lâmina" da garra — mesma técnica do Monstro do Phishing
+  // (drawClawFinger), mas com um gradiente escuro→magenta ao longo do
+  // comprimento em vez de branco/prateado: aqui a garra não é metal polido,
+  // é energia sombria condensada, por isso a ponta "acende".
+  function drawShadowClawFinger(ctx, wx, wy, angle, len, width) {
     ctx.save();
-    ctx.strokeStyle="rgba(127,224,255,0.45)"; ctx.lineWidth=1.4;
-    ctx.shadowColor="rgba(127,224,255,0.5)"; ctx.shadowBlur=6;
-    ctx.stroke();
+    ctx.translate(wx, wy);
+    ctx.rotate(angle);
+    const grad = ctx.createLinearGradient(0, 0, len, 0);
+    grad.addColorStop(0, SH.claw);
+    grad.addColorStop(0.6, SH.claw);
+    grad.addColorStop(1, SH.clawGlow);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -width / 2);
+    ctx.quadraticCurveTo(len * 0.3, -width * 0.4, len * 0.72, -width * 0.08);
+    ctx.lineTo(len, 0);
+    ctx.lineTo(len * 0.72, width * 0.08);
+    ctx.quadraticCurveTo(len * 0.3, width * 0.4, 0, width / 2);
+    ctx.closePath();
+    ctx.save();
+    ctx.shadowColor = SH.clawGlow; ctx.shadowBlur = 5;
+    ctx.fill();
     ctx.restore();
-    // 2) duas linhas de "bordado" a brilhar, a descer pela capa — dão
-    // textura/profundidade onde antes era uma só cor plana.
-    ctx.strokeStyle="rgba(150,150,200,0.55)"; ctx.lineWidth=1.4; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-9,C-6); ctx.quadraticCurveTo(C-12,C+16,C-11,S-20); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+9,C-6); ctx.quadraticCurveTo(C+12,C+16,C+11,S-20); ctx.stroke();
-    // capuz — sombra mais escura no topo
-    ctx.fillStyle="#08081a";
-    ctx.beginPath(); ctx.ellipse(C,C-18,17,20,0,0,Math.PI*2); ctx.fill();
-    // borda do capuz a brilhar ligeiramente — separa a cara do resto da capa
-    ctx.strokeStyle="rgba(127,224,255,0.3)"; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.ellipse(C,C-18,17,20,0,0,Math.PI*2); ctx.stroke();
-  }
-  // Mangas fantasmagóricas a sair da capa — "wave" levantadas (como a
-  // invocar sombras), "rest" a pender junto ao corpo. Reaproveita o mesmo
-  // gradiente escuro da capa, com garras pálidas na ponta para se destacar.
-  function drawGuardiaoArms(ctx, mood){
-    const grA=ctx.createLinearGradient(0,C-20,0,C+40);
-    grA.addColorStop(0,"#4a4a72"); grA.addColorStop(1,"#0e0e1c");
-    ctx.strokeStyle="#000"; ctx.lineWidth=2;
-    if (mood === "wave") {
-      [-1,1].forEach(side=>{
-        ctx.fillStyle=grA;
-        ctx.beginPath();
-        ctx.moveTo(C+side*18, C-4);
-        ctx.quadraticCurveTo(C+side*38, C-22, C+side*33, C-44);
-        ctx.lineTo(C+side*21, C-38);
-        ctx.quadraticCurveTo(C+side*22, C-18, C+side*9, C-2);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.fillStyle="#c8c8e0";
-        for(let i=-1;i<=1;i++){
-          ctx.beginPath();
-          ctx.moveTo(C+side*(27+i*3), C-40); ctx.lineTo(C+side*(29+i*3), C-49); ctx.lineTo(C+side*(31+i*3), C-40);
-          ctx.closePath(); ctx.fill();
-        }
-      });
-    } else {
-      [-1,1].forEach(side=>{
-        ctx.fillStyle=grA;
-        ctx.beginPath();
-        ctx.moveTo(C+side*18, C-4);
-        ctx.quadraticCurveTo(C+side*30, C+16, C+side*23, C+32);
-        ctx.lineTo(C+side*13, C+28);
-        ctx.quadraticCurveTo(C+side*15, C+8, C+side*9, C-2);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-      });
-    }
-  }
-  // eyesOpen=false: os olhos-brilho ficam só um traço fino a espreitar do
-  // capuz, em vez do brilho cheio — a mesma ideia do piscar do Monstro.
-  function drawGuardiaoFace(ctx, eyesOpen){
-    if (eyesOpen) {
-      glowEye(ctx, C-7, C-18, 5, "#8ee8ff");
-      glowEye(ctx, C+7, C-18, 5, "#8ee8ff");
-    } else {
-      ctx.strokeStyle="#7fe0ff"; ctx.lineWidth=2; ctx.lineCap="round";
-      ctx.shadowColor="#7fe0ff"; ctx.shadowBlur=6;
-      [-7,7].forEach(dx=>{
-        ctx.beginPath(); ctx.moveTo(C+dx-3,C-18); ctx.lineTo(C+dx+3,C-18); ctx.stroke();
-      });
-      ctx.shadowBlur=0;
-    }
-  }
-  if(!scene.textures.exists("boss_espiao_sombras")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"rest"); drawGuardiaoFace(ctx,true);
-    tex.refresh();
-  }
-  if(!scene.textures.exists("boss_espiao_sombras_armsdown")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_armsdown",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"rest"); drawGuardiaoFace(ctx,true);
-    tex.refresh();
-  }
-  if(!scene.textures.exists("boss_espiao_sombras_blink")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_blink",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"rest"); drawGuardiaoFace(ctx,false);
-    tex.refresh();
-  }
-  // "ouch": mangas levantadas em choque + olhos a brilhar com mais força
-  // (em vez de expressão facial, que a capa não tem) — reage na mesma.
-  if(!scene.textures.exists("boss_espiao_sombras_ouch")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_ouch",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"wave");
-    glowEye(ctx, C-7, C-18, 6, "#ffffff");
-    glowEye(ctx, C+7, C-18, 6, "#ffffff");
-    tex.refresh();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,79,230,0.55)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(len * 0.34, -width * 0.3); ctx.lineTo(len * 0.34, width * 0.3); ctx.stroke();
+    ctx.restore();
   }
 
-  // Estado "riso maléfico" — entrada em combate: olhos semicerrados de
-  // gozo, confiante que a escuridão vai vencer. Sem boca (a capa não tem,
-  // ver comentário no "ouch" acima) — tudo se exprime só nos olhos.
-  if(!scene.textures.exists("boss_espiao_sombras_laugh")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_laugh",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"rest");
-    ctx.strokeStyle="#7fe0ff"; ctx.lineWidth=2.5; ctx.lineCap="round";
-    ctx.shadowColor="#7fe0ff"; ctx.shadowBlur=8;
-    [-7,7].forEach(dx=>{
-      ctx.beginPath(); ctx.arc(C+dx, C-15, 4.5, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+  // Mão inteira (palma + 3 dedos), reutilizada dos dois lados — "spread"
+  // (-1 ou 1) inverte o leque para a garra abrir sempre para fora do corpo,
+  // qualquer que seja o braço.
+  function drawShadowClawHand(ctx, wx, wy, spread) {
+    ctx.fillStyle = SH.cloakMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.ellipse(wx, wy, 12, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    drawShadowClawFinger(ctx, wx - 4, wy - 13, -0.6 * spread, 19, 8.5);
+    drawShadowClawFinger(ctx, wx - 6, wy + 1, -0.08 * spread, 22, 9.5);
+    drawShadowClawFinger(ctx, wx - 4, wy + 14, 0.48 * spread, 18, 8.5);
+  }
+
+  // Capa: mesma silhueta com bainha em zigue-zague do Monstro do Phishing
+  // (drawPhishingCloak), em tons roxo-magenta. Cinto igual (fivela simples,
+  // sem anzol — este boss não tem tema de "isco"). Em vez do crachá de
+  // email falso, um pequeno "coletor de dados" no peito — duas ranhuras a
+  // brilhar, como um leitor a copiar informação.
+  function drawShadowCloak(ctx) {
+    const grad = ctx.createLinearGradient(0, C - 14, 0, C + 34);
+    grad.addColorStop(0, SH.cloakLight);
+    grad.addColorStop(0.55, SH.cloakMid);
+    grad.addColorStop(1, SH.cloakDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(C - 30, C - 6);
+    ctx.quadraticCurveTo(C - 42, C + 10, C - 34, C + 24);
+    ctx.lineTo(C - 27, C + 21);
+    ctx.lineTo(C - 19, C + 35);
+    ctx.lineTo(C - 9, C + 23);
+    ctx.lineTo(C, C + 37);
+    ctx.lineTo(C + 9, C + 23);
+    ctx.lineTo(C + 19, C + 35);
+    ctx.lineTo(C + 27, C + 21);
+    ctx.lineTo(C + 34, C + 24);
+    ctx.quadraticCurveTo(C + 42, C + 10, C + 30, C - 6);
+    ctx.quadraticCurveTo(C, C - 18, C - 30, C - 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.6;
+    ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = SH.glow2; ctx.shadowBlur = 7;
+    ctx.strokeStyle = "rgba(200,107,255,0.5)"; ctx.lineWidth = 1.3;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle = SH.belt;
+    ctx.beginPath(); ctx.roundRect(C - 29, C + 6, 58, 9, 3); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.fillStyle = SH.buckle;
+    ctx.beginPath(); ctx.roundRect(C - 8, C + 4, 16, 13, 3); ctx.fill(); ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 4;
+    ctx.fillStyle = SH.glow;
+    ctx.beginPath(); ctx.arc(C, C + 10.5, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // coletor de dados — a "mochila" do espião, ao peito
+    ctx.fillStyle = SH.panel;
+    ctx.beginPath(); ctx.roundRect(C - 13, C - 8, 26, 17, 3); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 5;
+    ctx.fillStyle = SH.glow;
+    ctx.beginPath(); ctx.roundRect(C - 9, C - 4, 18, 4, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(C - 9, C + 2, 10, 4, 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Botas — idênticas em construção às do Monstro do Phishing
+  // (drawPhishingLegs), só recolorida. Pés a C+49 abaixo do centro, a
+  // mesma medida da outra família — ver bossY em data-bosses.js.
+  function drawShadowLegs(ctx) {
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    [-15, 15].forEach(dx => {
+      ctx.fillStyle = SH.cloakMid;
+      ctx.beginPath(); ctx.roundRect(C + dx - 6, C + 26, 12, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = SH.hatDark;
+      ctx.beginPath(); ctx.roundRect(C + dx - 11, C + 36, 22, 13, 4); ctx.fill(); ctx.stroke();
+      ctx.save();
+      ctx.shadowColor = SH.glow; ctx.shadowBlur = 4;
+      ctx.strokeStyle = SH.glow; ctx.lineWidth = 1.8; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(C + dx - 5, C + 42.5); ctx.lineTo(C + dx + 5, C + 42.5); ctx.stroke();
+      ctx.restore();
     });
-    ctx.shadowBlur=0;
+  }
+
+  // Cabeça-ecrã — moldura igual à do Monstro do Phishing (mesma função de
+  // desenho, só que aqui inclui também a pequena gola com um segundo olho
+  // por baixo, tal como na ilustração de referência deste boss.
+  function drawShadowScreen(ctx) {
+    ctx.fillStyle = SH.frameDark;
+    ctx.beginPath(); ctx.roundRect(C - 24, 20, 48, 36, 8); ctx.fill();
+    ctx.fillStyle = SH.frame;
+    ctx.beginPath(); ctx.roundRect(C - 22, 22, 44, 32, 7); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = SH.screenBg;
+    ctx.beginPath(); ctx.roundRect(C - 18, 26, 36, 24, 5); ctx.fill();
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 9;
+    ctx.strokeStyle = "rgba(255,79,230,0.5)"; ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    // gola com um segundo "olho", por baixo do ecrã
+    ctx.fillStyle = SH.frameDark;
+    ctx.beginPath(); ctx.arc(C, 60, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.fillStyle = SH.panel;
+    ctx.beginPath(); ctx.arc(C, 60, 4.6, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 5;
+    ctx.fillStyle = SH.glow;
+    ctx.beginPath(); ctx.ellipse(C, 60, 3, 1.7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Capuz de feiticeiro — desenhado ANTES do ecrã (ver drawShadowBody) para
+  // que a cabeça-ecrã, desenhada por cima, "corte" a zona central e deixe
+  // só a auréola do capuz visível no topo e nas laterais, tal como na
+  // ilustração de referência. O emblema — um olho-que-tudo-vê bordado —
+  // fica no pico, por isso continua visível acima do ecrã.
+  function drawShadowHood(ctx) {
+    const grad = ctx.createLinearGradient(C - 34, 0, C + 34, 54);
+    grad.addColorStop(0, SH.cloakLight);
+    grad.addColorStop(1, SH.cloakDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(C - 33, 55);
+    ctx.quadraticCurveTo(C - 40, 24, C - 17, 6);
+    ctx.quadraticCurveTo(C - 6, -1, C + 6, -1);
+    ctx.quadraticCurveTo(C + 17, 6, C + 40, 24);
+    ctx.quadraticCurveTo(C + 33, 55, C + 20, 46);
+    ctx.quadraticCurveTo(C, 40, C - 20, 46);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4; ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = SH.glow2; ctx.shadowBlur = 6;
+    ctx.strokeStyle = "rgba(200,107,255,0.5)"; ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 6;
+    ctx.strokeStyle = SH.glow; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(C - 9, 11); ctx.quadraticCurveTo(C, 5, C + 9, 11);
+    ctx.quadraticCurveTo(C, 15, C - 9, 11);
+    ctx.stroke();
+    ctx.fillStyle = SH.glow;
+    ctx.beginPath(); ctx.arc(C, 11, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGuardiaoBody(ctx) {
+    bossShadow(ctx);
+    drawShadowLegs(ctx);
+    drawShadowCloak(ctx);
+    drawShadowHood(ctx);
+    drawShadowScreen(ctx);
+  }
+
+  // Braços: "wave" = as duas garras estendidas (mais ameaçador que o
+  // Monstro do Phishing, que só tinha uma) — cada uma nasce de um antebraço
+  // com anéis a brilhar, igual ao braço blindado do Monstro. "rest" =
+  // mangas simples com uma garra pequena na ponta, para os estados calmos.
+  function drawGuardiaoArms(ctx, mood) {
+    if (mood === "wave") {
+      ctx.fillStyle = SH.cloakMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(C - 28, C + 4, 12, 17, -0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(C + 28, C + 4, 12, 17, 0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.save();
+      ctx.strokeStyle = SH.glow; ctx.lineWidth = 1.6; ctx.shadowColor = SH.glow; ctx.shadowBlur = 3;
+      [[-28, -0.25], [28, 0.25]].forEach(([dx, rot]) => {
+        ctx.save(); ctx.translate(C + dx, C + 4); ctx.rotate(rot);
+        ctx.beginPath(); ctx.ellipse(0, 0, 12, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      });
+      ctx.restore();
+      drawShadowClawHand(ctx, C - 33, C + 2, -1);
+      drawShadowClawHand(ctx, C + 33, C + 2, 1);
+    } else {
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 2.2;
+      [-33, 33].forEach(dx => {
+        ctx.fillStyle = SH.cloakMid;
+        ctx.beginPath(); ctx.ellipse(C + dx, C + 6, 8, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = SH.claw;
+        ctx.beginPath(); ctx.arc(C + dx, C + 18, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.save();
+        ctx.shadowColor = SH.glow; ctx.shadowBlur = 3;
+        ctx.fillStyle = SH.glow;
+        ctx.beginPath(); ctx.arc(C + dx, C + 18, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+    }
+  }
+
+  // Cara — mesma gramática do Monstro do Phishing (drawPhishingFace), em
+  // magenta em vez de ciano. O estado "triste" aqui é diferente de
+  // propósito: em vez de olhos caídos, o ecrã praticamente apaga-se (só
+  // resta um fiapo de luz) — mais coerente com "espião das sombras a
+  // perder o seu poder" do que uma cara triste desenhada.
+  function drawGuardiaoFace(ctx, mood) {
+    const ex = 15, ey = 36;
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 6;
+    ctx.fillStyle = SH.glow; ctx.strokeStyle = SH.glow;
+
+    if (mood === "blink") {
+      ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.moveTo(C + dx - 6, ey); ctx.lineTo(C + dx + 6, ey); ctx.stroke();
+      });
+    } else if (mood === "ouch") {
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey, 6, 0, Math.PI * 2); ctx.fill();
+      });
+    } else if (mood === "laugh") {
+      ctx.lineWidth = 2.6; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey + 2, 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      });
+    } else if (mood === "angry") {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey - 6);
+        ctx.lineTo(C + dx + 7 * side, ey + 2);
+        ctx.lineTo(C + dx - 2 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    } else if (mood === "sad") {
+      ctx.lineWidth = 2; ctx.globalAlpha = 0.35;
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey + 2, 4, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    } else {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey + 5);
+        ctx.lineTo(C + dx + 7 * side, ey - 4);
+        ctx.lineTo(C + dx + 7 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    }
+    ctx.restore();
+    if (mood === "sad") return;
+
+    ctx.save();
+    ctx.shadowColor = SH.glow; ctx.shadowBlur = 5;
+    ctx.fillStyle = SH.glow;
+    const my = 47;
+    if (mood === "laugh") {
+      ctx.beginPath();
+      ctx.moveTo(C - 14, 43); ctx.lineTo(C - 8, 50); ctx.lineTo(C - 2, 43); ctx.lineTo(C + 4, 50);
+      ctx.lineTo(C + 10, 43); ctx.lineTo(C + 14, 48); ctx.lineTo(C + 14, 52);
+      ctx.lineTo(C - 14, 52); ctx.closePath(); ctx.fill();
+    } else if (mood === "ouch") {
+      ctx.beginPath(); ctx.ellipse(C, my, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(C - 13, my - 3); ctx.lineTo(C - 7, my + 4); ctx.lineTo(C - 1, my - 3); ctx.lineTo(C + 5, my + 4);
+      ctx.lineTo(C + 11, my - 3); ctx.lineTo(C + 13, my); ctx.lineTo(C + 13, my + 5);
+      ctx.lineTo(C - 13, my + 5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  if (!scene.textures.exists("boss_espiao_sombras")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "wave"); drawGuardiaoFace(ctx, "normal");
     tex.refresh();
   }
-  // Estado "zangado" (vermelho) — durante a escalada de fúria, o brilho dos
-  // olhos muda de ciano para um tom quente/avermelhado; o motor de jogo
-  // aplica também um tint por cima deste estado.
-  if(!scene.textures.exists("boss_espiao_sombras_angry")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_angry",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"wave");
-    glowEye(ctx, C-7, C-18, 5.4, "#ff6a5c");
-    glowEye(ctx, C+7, C-18, 5.4, "#ff6a5c");
-    ctx.strokeStyle="#ff6a5c"; ctx.lineWidth=2.5; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-15,C-27); ctx.lineTo(C-4,C-22); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+4,C-22); ctx.lineTo(C+15,C-27); ctx.stroke();
+  if (!scene.textures.exists("boss_espiao_sombras_armsdown")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_armsdown", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "rest"); drawGuardiaoFace(ctx, "normal");
     tex.refresh();
   }
-  // Estado "triste" — derrota: o brilho apaga-se quase todo antes de fugir.
-  if(!scene.textures.exists("boss_espiao_sombras_sad")){
-    const tex=scene.textures.createCanvas("boss_espiao_sombras_sad",S,S), ctx=tex.getContext();
-    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx,"rest");
-    glowEye(ctx, C-7, C-14, 2.6, "#5a90a8");
-    glowEye(ctx, C+7, C-14, 2.6, "#5a90a8");
+  if (!scene.textures.exists("boss_espiao_sombras_blink")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_blink", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "rest"); drawGuardiaoFace(ctx, "blink");
+    tex.refresh();
+  }
+  // "ouch": braços em garra levantados em choque + olhos redondos
+  // esbugalhados — a mesma reação do Monstro do Phishing.
+  if (!scene.textures.exists("boss_espiao_sombras_ouch")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_ouch", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "wave"); drawGuardiaoFace(ctx, "ouch");
+    tex.refresh();
+  }
+  // Estado "riso maléfico" — entrada em combate: confiante que a escuridão
+  // vai vencer.
+  if (!scene.textures.exists("boss_espiao_sombras_laugh")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_laugh", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "rest"); drawGuardiaoFace(ctx, "laugh");
+    tex.refresh();
+  }
+  // Estado "zangado" — durante a escalada de fúria; o motor de jogo aplica
+  // também um tint avermelhado por cima deste estado.
+  if (!scene.textures.exists("boss_espiao_sombras_angry")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_angry", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "wave"); drawGuardiaoFace(ctx, "angry");
+    tex.refresh();
+  }
+  // Estado "triste" — derrota: o brilho da cara apaga-se quase todo (ver
+  // comentário em drawGuardiaoFace) antes de fugir, em vez de uma cara
+  // triste desenhada — mais coerente com "sombra a perder o poder".
+  if (!scene.textures.exists("boss_espiao_sombras_sad")) {
+    const tex = scene.textures.createCanvas("boss_espiao_sombras_sad", S, S), ctx = tex.getContext();
+    drawGuardiaoBody(ctx); drawGuardiaoArms(ctx, "rest"); drawGuardiaoFace(ctx, "sad");
     tex.refresh();
   }
 
