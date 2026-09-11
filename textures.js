@@ -1036,9 +1036,21 @@ function makeBossTextures(scene){
   function drawVirusClawHand(ctx, wx, wy, spread) {
     ctx.fillStyle = VG.bodyMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.8;
     ctx.beginPath(); ctx.ellipse(wx, wy, 13, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    drawVirusClawFinger(ctx, wx - 4, wy - 14, -0.6 * spread, 22, 9.5);
-    drawVirusClawFinger(ctx, wx - 6, wy + 1, -0.08 * spread, 25, 10.5);
-    drawVirusClawFinger(ctx, wx - 4, wy + 15, 0.48 * spread, 21, 9.5);
+    // CORRIGIDO (pedido: aproximar da imagem de referência do robô-vírus,
+    // cuja garra lê-se claramente aberta para fora) — os ângulos antigos
+    // (-0.6*spread, -0.08*spread, 0.48*spread) rodavam sempre à volta de 0
+    // rad, por isso em AMBAS as mãos os 3 dedos apontavam sempre para a
+    // direita (para DENTRO do corpo do lado esquerdo, cruzando-se com o
+    // tronco/tentáculos) — só invertia o sentido do leque, nunca a direção
+    // geral. Agora usa-se a mesma receita da garra do Monstro do Phishing
+    // (drawPhishingArms, mão única): direção-base "out" vira Math.PI (para a
+    // esquerda) quando a mão é a esquerda (spread<0) e 0 (para a direita)
+    // quando é a direita — os dedos abrem sempre AFASTADOS do tronco.
+    const out = spread < 0 ? Math.PI : 0;
+    const fan = spread < 0 ? 1 : -1;
+    drawVirusClawFinger(ctx, wx + spread * 4,  wy - 14, out - 0.13 * fan, 22, 9.5);
+    drawVirusClawFinger(ctx, wx + spread * 6,  wy + 1,  out + 0.16 * fan, 25, 10.5);
+    drawVirusClawFinger(ctx, wx + spread * 4,  wy + 15, out + 0.53 * fan, 21, 9.5);
   }
 
   // Tentáculo-cabo: um cabo curvo com uma ficha USB na ponta (em vez de uma
@@ -1383,9 +1395,15 @@ function makeBossTextures(scene){
   function drawShadowClawHand(ctx, wx, wy, spread) {
     ctx.fillStyle = SH.cloakMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.8;
     ctx.beginPath(); ctx.ellipse(wx, wy, 12, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    drawShadowClawFinger(ctx, wx - 4, wy - 13, -0.6 * spread, 19, 8.5);
-    drawShadowClawFinger(ctx, wx - 6, wy + 1, -0.08 * spread, 22, 9.5);
-    drawShadowClawFinger(ctx, wx - 4, wy + 14, 0.48 * spread, 18, 8.5);
+    // CORRIGIDO — mesmo bug e mesma correção do Vírus Gigante
+    // (drawVirusClawHand, ver comentário lá): os dedos apontavam sempre
+    // para dentro do corpo em vez de para fora. "out" dá a direção-base
+    // correta consoante o lado da mão.
+    const out = spread < 0 ? Math.PI : 0;
+    const fan = spread < 0 ? 1 : -1;
+    drawShadowClawFinger(ctx, wx + spread * 4,  wy - 13, out - 0.13 * fan, 19, 8.5);
+    drawShadowClawFinger(ctx, wx + spread * 6,  wy + 1,  out + 0.16 * fan, 22, 9.5);
+    drawShadowClawFinger(ctx, wx + spread * 4,  wy + 14, out + 0.53 * fan, 18, 8.5);
   }
 
   // Capa: mesma silhueta com bainha em zigue-zague do Monstro do Phishing
@@ -1837,10 +1855,17 @@ function makeBossTextures(scene){
   // corpo, sem tocar na fiada de rodas.
   function drawPoluidorArms(ctx, mood){
     if (mood === "wave") {
+      // CORRIGIDO (pedido: aproximar da imagem de referência do robô-caixa
+      // de correio) — com side*28 (ombro) + side*23 (pulso) + até 15px de
+      // lâmina de pinça, a ponta chegava a ~124px num canvas de 116px: a
+      // pinça ficava sempre cortada pela margem do ecrã. side*24/side*18 +
+      // lâminas mais curtas (11/12/-7) mantêm a mesma pose só que "encolhida"
+      // o suficiente para caber inteira dentro do canvas, com uma pequena
+      // folga.
       [-1,1].forEach(side=>{
-        const sx=C+side*28, sy=C-2;
-        const mx=sx+side*14, my=sy-13;
-        const ex=sx+side*23, ey=sy-7;
+        const sx=C+side*24, sy=C-2;
+        const mx=sx+side*12, my=sy-13;
+        const ex=sx+side*18, ey=sy-7;
         ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";
         ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(mx,my); ctx.stroke();
         ctx.lineWidth=7.5;
@@ -1854,7 +1879,7 @@ function makeBossTextures(scene){
         ctx.translate(ex,ey);
         ctx.rotate(Math.atan2(ey-my, ex-mx));
         ctx.fillStyle="#4a4a52"; ctx.strokeStyle="#18181c"; ctx.lineWidth=1.6;
-        [[-0.5,14],[0.55,15],[0.05,-9]].forEach(([da,len])=>{
+        [[-0.5,11],[0.55,12],[0.05,-7]].forEach(([da,len])=>{
           ctx.save(); ctx.rotate(da);
           ctx.beginPath();
           ctx.moveTo(0,-3); ctx.lineTo(len*0.8,-1.5); ctx.lineTo(len,0); ctx.lineTo(len*0.8,1.5); ctx.lineTo(0,3);
@@ -1867,7 +1892,10 @@ function makeBossTextures(scene){
       });
     } else {
       [-1,1].forEach(side=>{
-        const sx=C+side*28, sy=C-2;
+        // side*28 → side*24: mesmo ombro do braço "wave" acima (ver
+        // comentário nesse bloco) — evita um pequeno "salto" do ombro ao
+        // trocar de pose entre os estados normal e este (mangas em repouso).
+        const sx=C+side*24, sy=C-2;
         const mx=sx+side*17, my=sy+13;
         const ex=sx+side*21, ey=sy+24;
         ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";

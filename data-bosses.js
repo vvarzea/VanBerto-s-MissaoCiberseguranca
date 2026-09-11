@@ -309,7 +309,16 @@ export const BOSSES = [
       // — 400 fica fora do alcance das duas plataformas baixas (160-280 e
       // 680-800), continuando a aterrar no chão principal.
       playerStartX: 400,
-      spawnSpots: [220, 480, 740]
+      spawnSpots: [220, 480, 740],
+      // Decor adicionado (pedido: aproximar da ilustração de referência,
+      // que mostra várias orbes sombrias com um olho a brilhar, a flutuar à
+      // volta do feiticeiro) — era o único dos 4 bosses sem nenhum decor na
+      // arena. Mesmo padrão dos outros 3 (3 emojis, posições espalhadas).
+      decor: [
+        { emoji:"🔮", x:90,  y:150 },
+        { emoji:"👁️", x:480, y:110 },
+        { emoji:"🔮", x:870, y:170 }
+      ]
     }
   },
   {
