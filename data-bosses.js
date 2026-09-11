@@ -13,7 +13,17 @@ export const BOSSES = [
                               // jogos seguros, pegada digital, fake news, phishing).
     name: "Monstro do Phishing",
     emoji: "👾",
-    color: 0x8a5cff,
+    // Cor alinhada com o redesenho "pirata-hacker" (ver makeBossTextures em
+    // textures.js) — antes era roxo (0x8a5cff), a cor do blob antigo; agora
+    // é o mesmo ciano da orla/olhos/brilho do novo boss. Usada no overlay
+    // de fundo da arena, nas partículas de dano/derrota e como rede de
+    // segurança (setTint) caso a textura não carregue.
+    color: 0x39d6ff,
+    // Anzol prateado em vez da bola "?" roxa genérica — ver comentário
+    // completo junto a boss_proj_hook em textures.js. Sem orbTint: o anzol
+    // já tem as suas próprias cores (prateado + brilho ciano), tal como o
+    // envelope do Robô do Spam.
+    orbTexture: "boss_proj_hook",
     // ===== Redesenho "Boss clássico à Mario" (nova) =====
     // Filosofia: arena do tamanho da janela (sem scroll), poucas plataformas,
     // e uma mecânica só — saltar-lhe em cima 3 vezes. Nada de fases, nada de
@@ -50,7 +60,14 @@ export const BOSSES = [
     // corpo começa só a ~1/5 do canvas) — sem isto a barra de vida usava a
     // conta genérica (baseada no canvas inteiro) e ficava muito afastada da
     // cabeça. 72px do centro chega perto o suficiente, com uma pequena folga.
-    hpBarOffset: 72,
+    // hpBarOffset: recalculado com o redesenho "pirata-hacker" (ver
+    // makeBossTextures em textures.js) — o chapéu tricórnio agora chega a
+    // ~1px do topo da tela (116px), bem mais alto do que a sobrancelha do
+    // desenho antigo. Medido o pixel mais alto desenhado (~57px acima do
+    // centro do canvas) × bossScale (1.5) ≈ 85, mais uma pequena folga →
+    // 96. Os pés continuam a ~49px abaixo do centro, exactamente como no
+    // desenho antigo, por isso bossY (abaixo) NÃO precisou de mudar.
+    hpBarOffset: 96,
     // Letreiro do objetivo (ver startBossFight): fica perto do chão, junto
     // ao ponto de partida do jogador — 486 é o mesmo valor por omissão dos
     // níveis normais, por isso não precisa de ajuste com a mudança de chão.

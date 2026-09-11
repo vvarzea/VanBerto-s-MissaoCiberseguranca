@@ -497,247 +497,476 @@ function makeBossTextures(scene){
     ctx.beginPath(); ctx.arc(x-r*0.3,y-r*0.3,r*0.32,0,Math.PI*2); ctx.fill();
   }
 
-  // ── 1) Monstro da Ignorância — redesenho "boss clássico à Mario" (nova) ──
-  // Antes: silhueta abstrata, sombria, com venda e boca cosida — assustadora
-  // e difícil de "ler" à distância. Agora: uma criatura roxa, rechonchuda e
-  // divertida — mistura de Goomba (simplicidade) com Bomberman (corpo
-  // arredondado) — baixa e larga de propósito, para ser óbvio saltar-lhe em
-  // cima. Nunca assustadora: olhos grandes com pupilas em "?", sorriso
-  // malandro, braços curtos com mãos grandes, pernas pequenas e pés largos.
-  function drawMonstroBody(ctx) {
-    bossShadow(ctx);
-    // Corpo — um só blob grande e macio, roxo, sólido (nada de fumo/abstrato)
-    const gr = ctx.createRadialGradient(C-12,C-16,6,C,C-2,44);
-    gr.addColorStop(0,"#ad82ff"); gr.addColorStop(0.55,"#6a3ad8"); gr.addColorStop(1,"#3a1a80");
-    ctx.fillStyle = gr;
-    ctx.beginPath(); ctx.ellipse(C, C-2, 40, 33, 0, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "#2a1060"; ctx.lineWidth = 3;
-    ctx.stroke();
-    // Barriga — roxo mais claro
-    ctx.fillStyle = "#cdb4ff";
-    ctx.beginPath(); ctx.ellipse(C, C+13, 19, 14, 0, 0, Math.PI*2); ctx.fill();
-    // Crachá de "email falso" na barriga — identifica-o de imediato como o
-    // Monstro do Phishing, em vez de um monstro roxo genérico.
-    ctx.fillStyle="#fffaff";
-    ctx.beginPath(); ctx.roundRect(C-12,C+4,24,16,2.5); ctx.fill();
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=1.4; ctx.stroke();
+  // ── 1) Monstro do Phishing — redesenho "pirata-hacker" (pedido: aproximar
+  // a aparência de uma ilustração de referência fornecida pelo Berto) ────
+  // Versão anterior: um blob roxo, rechonchuda, com pupilas em "?" — lida
+  // à distância mas sem ligação visual nenhuma ao tema "phishing". Nova
+  // versão: um caçador de dados sombrio — chapéu de pirata (o "anzol" é a
+  // metáfora clássica do phishing: morde o isco e é fisgado), cabeça-ecrã
+  // com uma cara maléfica tipo abóbora do Halloween em brilho ciano, capa
+  // esfarrapada azul-marinho, uma garra grande de um lado e uma cana de
+  // pesca com anzol do outro. Continua "stompBoss" (salta-lhe em cima 3
+  // vezes) — só a pele muda, a mecânica é exactamente a mesma, e os 8
+  // estados (normal/armsdown/blink/ouch/laugh/angry/sad/sentado) mantêm-se
+  // todos, só desenhados de novo com esta identidade.
+  //
+  // Paleta centralizada num só objeto (PH) para as 8 variantes usarem
+  // sempre exactamente as mesmas cores — evita o "cada estado com o seu
+  // tom" que aconteceria copiando valores à mão em cada função.
+  const PH = {
+    cloakDark:  "#0b1330",
+    cloakMid:   "#182a56",
+    cloakLight: "#2c4a86",
+    trim:       "#39d6ff",
+    glow:       "#8ff2ff",
+    screenBg:   "#081026",
+    frame:      "#dbe2ee",
+    frameDark:  "#8f9ab0",
+    belt:       "#4a3220",
+    buckle:     "#c7cedb",
+    claw:       "#eef2f7",
+    clawLine:   "#182a56",
+    hatDark:    "#0c1730",
+    envelope:   "#f4f7fb",
+    warn:       "#ff3050"
+  };
+
+  // Uma "lâmina" da garra — larga na base, estreita depressa para uma ponta
+  // fina, com uma junta articulada e um brilho fino ao longo do dorso.
+  // Reutilizada 4x (3 dedos + 1 esporão) rodando o desenho à volta do
+  // pulso, em vez de desenhar cada dedo à mão — garante que todos saem
+  // consistentes.
+  function drawClawFinger(ctx, wx, wy, angle, len, width) {
+    ctx.save();
+    ctx.translate(wx, wy);
+    ctx.rotate(angle);
+    const grad = ctx.createLinearGradient(0, -width / 2, 0, width / 2);
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(1, "#bcc7d9");
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(C-12,C+4); ctx.lineTo(C,C+13); ctx.lineTo(C+12,C+4);
+    ctx.moveTo(0, -width / 2);
+    ctx.quadraticCurveTo(len * 0.3, -width * 0.4, len * 0.72, -width * 0.08);
+    ctx.lineTo(len, 0);
+    ctx.lineTo(len * 0.72, width * 0.08);
+    ctx.quadraticCurveTo(len * 0.3, width * 0.4, 0, width / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = PH.clawLine; ctx.lineWidth = 1.7;
     ctx.stroke();
-    ctx.fillStyle="#ff3050";
-    ctx.beginPath(); ctx.arc(C+7,C+16,5,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="#fffaff"; ctx.font="bold 8px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText("!", C+7, C+16.5);
-    ctx.textBaseline="alphabetic";
-    // Pernas pequenas + pés largos — anda aos pequenos saltinhos, nunca flutua
-    ctx.strokeStyle = "#2a1060"; ctx.lineWidth = 2;
-    [-17,17].forEach(dx=>{
-      ctx.fillStyle = "#6a3ad8";
-      ctx.beginPath(); ctx.ellipse(C+dx, C+35, 9, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#2a1060";
-      ctx.beginPath(); ctx.ellipse(C+dx, C+43, 13, 6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(24,42,86,0.6)"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(len * 0.34, -width * 0.34); ctx.lineTo(len * 0.34, width * 0.34); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.75)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(width * 0.1, -width * 0.28); ctx.lineTo(len * 0.68, -width * 0.06); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Capa/manto: ombros largos a estreitar até uma bainha esfarrapada em
+  // zigue-zague (nunca reta — reforça o ar de vilão sombrio, tal como a
+  // capa do Espião das Sombras, mas em azul-marinho/ciano). Inclui o cinto
+  // com fivela em forma de anzol e o crachá de "email falso" que já
+  // identificava este boss como o do phishing — mantido, só re-tonalizado.
+  function drawPhishingCloak(ctx) {
+    const grad = ctx.createLinearGradient(0, C - 14, 0, C + 34);
+    grad.addColorStop(0, PH.cloakLight);
+    grad.addColorStop(0.55, PH.cloakMid);
+    grad.addColorStop(1, PH.cloakDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(C - 30, C - 6);
+    ctx.quadraticCurveTo(C - 40, C + 10, C - 33, C + 24);
+    ctx.lineTo(C - 27, C + 22);
+    ctx.lineTo(C - 19, C + 34);
+    ctx.lineTo(C - 9, C + 24);
+    ctx.lineTo(C, C + 36);
+    ctx.lineTo(C + 9, C + 24);
+    ctx.lineTo(C + 19, C + 34);
+    ctx.lineTo(C + 27, C + 22);
+    ctx.lineTo(C + 33, C + 24);
+    ctx.quadraticCurveTo(C + 40, C + 10, C + 30, C - 6);
+    ctx.quadraticCurveTo(C, C - 16, C - 30, C - 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.6;
+    ctx.stroke();
+    // orla a brilhar em ciano — dá o ar de "energia" que percorre o manto
+    ctx.save();
+    ctx.shadowColor = PH.trim; ctx.shadowBlur = 7;
+    ctx.strokeStyle = "rgba(57,214,255,0.55)"; ctx.lineWidth = 1.3;
+    ctx.stroke();
+    ctx.restore();
+
+    // cinto com fivela em forma de anzol
+    ctx.fillStyle = PH.belt;
+    ctx.beginPath(); ctx.roundRect(C - 29, C + 6, 58, 9, 3); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.fillStyle = PH.buckle;
+    ctx.beginPath(); ctx.roundRect(C - 8, C + 4, 16, 13, 3); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = PH.cloakMid; ctx.lineWidth = 2; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(C, C + 10.5, 3.6, Math.PI * 0.1, Math.PI * 1.35); ctx.stroke();
+
+    // crachá de "email falso" — mantém a identidade "phishing" já usada na
+    // versão anterior deste boss, só re-tonalizado para a nova paleta
+    ctx.fillStyle = PH.envelope;
+    ctx.beginPath(); ctx.roundRect(C - 11, C - 6, 22, 15, 2); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(C - 11, C - 6); ctx.lineTo(C, C + 3); ctx.lineTo(C + 11, C - 6); ctx.stroke();
+    ctx.fillStyle = PH.warn;
+    ctx.beginPath(); ctx.arc(C + 6, C + 6, 4.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fffaff"; ctx.font = "bold 7px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("!", C + 6, C + 6.5);
+    ctx.textBaseline = "alphabetic";
+  }
+
+  // Botas curtas e largas, sempre na mesma posição em todos os frames — o
+  // boss fica bem "assente" no chão, importante para o salto-na-cabeça ser
+  // sempre previsível. Pés terminam em C+49 (igual à medição original desta
+  // arena — ver bossY em data-bosses.js), por isso bossY não precisou de
+  // ser recalculado com este redesenho.
+  function drawPhishingLegs(ctx) {
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.4;
+    [-15, 15].forEach(dx => {
+      ctx.fillStyle = PH.cloakMid;
+      ctx.beginPath(); ctx.roundRect(C + dx - 6, C + 26, 12, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = PH.hatDark;
+      ctx.beginPath(); ctx.roundRect(C + dx - 11, C + 36, 22, 13, 4); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = PH.trim; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(C + dx - 11, C + 40); ctx.lineTo(C + dx + 11, C + 40); ctx.stroke();
+      ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.4;
     });
   }
-  // Braços curtos, mãos grandes — "wave" (a acenar/apontar, usado na pose
-  // normal e confiante) ou "rest" (junto ao corpo, usado no estado de dor).
-  function drawMonstroArms(ctx, mood) {
-    ctx.strokeStyle = "#2a1060"; ctx.lineWidth = 2;
-    if (mood === "wave") {
-      [[-1,-34,-8],[1,34,-8]].forEach(([side,dx,dy])=>{
-        ctx.fillStyle = "#6a3ad8";
-        ctx.beginPath(); ctx.ellipse(C+dx*0.7, C+dy, 9, 15, side*0.55, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(C+dx, C+dy-10, 8.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      });
-    } else {
-      [-38,38].forEach(dx=>{
-        ctx.fillStyle = "#6a3ad8";
-        ctx.beginPath(); ctx.ellipse(C+dx, C+8, 8, 13, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(C+dx, C+21, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      });
-    }
+
+  // Cabeça-ecrã: moldura prateada + fundo escuro. A cara (olhos/boca) é
+  // desenhada à parte, em drawPhishingFace, para poder variar por humor sem
+  // repetir a moldura em cada uma das 8 texturas.
+  function drawPhishingScreen(ctx, dy) {
+    dy = dy || 0;
+    ctx.fillStyle = PH.frameDark;
+    ctx.beginPath(); ctx.roundRect(C - 24, 16 + dy, 48, 36, 8); ctx.fill();
+    ctx.fillStyle = PH.frame;
+    ctx.beginPath(); ctx.roundRect(C - 22, 18 + dy, 44, 32, 7); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = PH.screenBg;
+    ctx.beginPath(); ctx.roundRect(C - 18, 22 + dy, 36, 24, 5); ctx.fill();
+    ctx.save();
+    ctx.shadowColor = PH.trim; ctx.shadowBlur = 8;
+    ctx.strokeStyle = "rgba(57,214,255,0.5)"; ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
   }
-  // Estado normal — confiante, sorriso malandro, um sobrolho levantado.
-  // Pupilas em forma de "?" — reforça o tema sem precisar de mais nada.
-  // Olhos + sobrolho + sorriso do estado normal, separados num helper para
-  // poderem ser reutilizados nas novas variantes de animação "idle" (piscar
-  // e braços em repouso) sem duplicar o desenho todo. eyesOpen=false desenha
-  // os olhos fechados (piscar), mantendo a mesma zona ocular para o "?" não
-  // saltar de posição quando volta a abrir.
-  function drawMonstroFace(ctx, eyesOpen) {
-    if (eyesOpen) {
-      [-16,16].forEach(dx=>{
-        ctx.fillStyle="#fffaff";
-        ctx.beginPath(); ctx.ellipse(C+dx, C-10, 12, 13, 0, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle="#2a1060"; ctx.lineWidth=1.5; ctx.stroke();
-        ctx.fillStyle="#2a1060"; ctx.font="bold 15px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
-        ctx.fillText("?", C+dx, C-8);
-      });
-      ctx.textBaseline="alphabetic";
-    } else {
-      ctx.strokeStyle="#2a1060"; ctx.lineWidth=2.5; ctx.lineCap="round";
-      [-16,16].forEach(dx=>{
-        ctx.beginPath(); ctx.moveTo(C+dx-9, C-9); ctx.quadraticCurveTo(C+dx, C-4, C+dx+9, C-9); ctx.stroke();
-      });
-    }
-    // Sobrolho malandro — um levantado, o outro relaxado ("está sempre
-    // convencido que vai ganhar")
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=3; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-26,C-26); ctx.lineTo(C-8,C-30); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+8,C-22); ctx.lineTo(C+26,C-20); ctx.stroke();
-    // Sorriso assimétrico, malandro — preenchido (não só contorno fino) para
-    // se ler bem à distância/em jogo, com um "dente" a brilhar no canto
-    // levantado, reforçando o ar convencido.
-    ctx.fillStyle="#2a1060";
+
+  // Chapéu de pirata: aba larga + copa em "dois bicos" (tricórnio), com um
+  // pequeno emblema de anzol em ciano — reforça "phishing" = pesca ilegal
+  // de dados, o mesmo raciocínio do anzol na cana que os braços seguram.
+  function drawPhishingHat(ctx) {
+    ctx.fillStyle = PH.hatDark;
+    ctx.beginPath(); ctx.ellipse(C, 17, 26, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2; ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = PH.trim; ctx.shadowBlur = 5;
+    ctx.strokeStyle = "rgba(57,214,255,0.5)"; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.ellipse(C, 17, 26, 6.5, 0, 0, Math.PI); ctx.stroke();
+    ctx.restore();
+
+    const grad = ctx.createLinearGradient(C - 16, 0, C + 16, 20);
+    grad.addColorStop(0, "#16264d");
+    grad.addColorStop(1, PH.hatDark);
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(C-15,C+14);
-    ctx.quadraticCurveTo(C, C+29, C+22, C+9);
-    ctx.quadraticCurveTo(C+2, C+21, C-15,C+14);
+    ctx.moveTo(C - 17, 18);
+    ctx.quadraticCurveTo(C - 19, 5, C - 9, 2);
+    ctx.quadraticCurveTo(C - 3, 8, C - 1, 10);
+    ctx.quadraticCurveTo(C + 3, 6, C + 8, 6);
+    ctx.quadraticCurveTo(C + 18, 5, C + 17, 18);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle="#1a0a40"; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.fillStyle="#fffaff";
-    ctx.beginPath(); ctx.moveTo(C+18,C+11); ctx.lineTo(C+23,C+9); ctx.lineTo(C+19,C+16); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(C - 1, 10); ctx.lineTo(C + 3, 17); ctx.stroke();
+
+    ctx.fillStyle = PH.glow;
+    ctx.beginPath(); ctx.arc(C - 5, 12, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PH.glow; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(C - 5, 15); ctx.lineTo(C - 5, 18); ctx.arc(C - 3, 18, 2, Math.PI, Math.PI * 0.1, true); ctx.stroke();
   }
-  if(!scene.textures.exists("boss_monstro_phishing")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "wave");
-    drawMonstroFace(ctx, true);
+
+  // Corpo completo (tudo o que não muda por humor/braço): sombra, botas,
+  // capa+cinto+crachá, cabeça-ecrã e chapéu, por esta ordem para o
+  // sobrepor ficar correto (capa tapa o topo das botas, ecrã tapa o
+  // decote da capa, chapéu fica por cima do ecrã).
+  function drawPhishingBody(ctx) {
+    bossShadow(ctx);
+    drawPhishingLegs(ctx);
+    drawPhishingCloak(ctx);
+    drawPhishingScreen(ctx);
+    drawPhishingHat(ctx);
+  }
+
+  // Braços: mood "wave" = pose de combate (garra grande de um lado, cana de
+  // pesca com anzol do outro); mood "rest" = mangas simples junto ao corpo,
+  // usado nos estados mais calmos (dor, tristeza, idle "braços em baixo").
+  // O antebraço da garra tem anéis a brilhar (recorte + traço por cima),
+  // sugerindo um braço blindado/segmentado como na ilustração de
+  // referência, em vez de uma manga lisa.
+  function drawPhishingArms(ctx, mood) {
+    if (mood === "wave") {
+      ctx.fillStyle = PH.cloakMid; ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(C - 33, C + 4, 13, 18, -0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.save();
+      ctx.clip();
+      ctx.strokeStyle = "rgba(57,214,255,0.75)"; ctx.lineWidth = 2;
+      [-8, 0, 8].forEach(oy => {
+        ctx.beginPath(); ctx.ellipse(C - 33, C + 4 + oy, 13, 5, -0.25, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.restore();
+
+      // garra grande — palma + 3 dedos a abrir em leque (cada um nasce num
+      // ponto próprio da borda da palma, não todos no mesmo sítio, para não
+      // colarem numa "luva" só) + um esporão traseiro que reforça a leitura
+      // de garra.
+      const wrist = { x: C - 44, y: C + 3 };
+      ctx.fillStyle = PH.claw; ctx.strokeStyle = PH.clawLine; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.ellipse(wrist.x + 10, wrist.y, 13, 15, -0.15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      drawClawFinger(ctx, wrist.x + 4, wrist.y - 13, Math.PI * 0.96, 32, 9.5);
+      drawClawFinger(ctx, wrist.x - 2, wrist.y + 1, Math.PI * 1.05, 37, 10.5);
+      drawClawFinger(ctx, wrist.x + 3, wrist.y + 14, Math.PI * 1.17, 30, 9.5);
+      drawClawFinger(ctx, wrist.x + 16, wrist.y + 11, Math.PI * 0.42, 15, 7);
+
+      // manga direita + cana de pesca com anzol (a "isca digital" do boss)
+      ctx.fillStyle = PH.cloakMid; ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(C + 32, C - 2, 9, 15, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#dfe6f0";
+      ctx.beginPath(); ctx.arc(C + 34, C - 14, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = PH.hatDark; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(C + 34, C - 14); ctx.quadraticCurveTo(C + 48, C - 34, C + 42, C - 52); ctx.stroke();
+      ctx.strokeStyle = PH.trim; ctx.lineWidth = 1; ctx.lineCap = "butt";
+      ctx.beginPath(); ctx.moveTo(C + 42, C - 52); ctx.quadraticCurveTo(C + 40, C - 24, C + 40, C - 2); ctx.stroke();
+      ctx.strokeStyle = PH.glow; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(C + 40, C - 2); ctx.quadraticCurveTo(C + 46, C + 4, C + 42, C + 10); ctx.stroke();
+    } else {
+      ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+      [-33, 33].forEach(dx => {
+        ctx.fillStyle = PH.cloakMid;
+        ctx.beginPath(); ctx.ellipse(C + dx, C + 6, 8, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = PH.claw;
+        ctx.beginPath(); ctx.arc(C + dx, C + 18, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      });
+    }
+  }
+
+  // Cara — desenhada dentro da área do ecrã (drawPhishingScreen), sempre em
+  // brilho ciano (glow). "mood" cobre os 6 humores usados pelas 6 texturas
+  // com cabeça normal (sentado tem a sua própria cara, à parte, porque a
+  // pose toda é diferente).
+  function drawPhishingFace(ctx, mood) {
+    const ex = 15, ey = 32;
+    ctx.save();
+    ctx.shadowColor = PH.glow; ctx.shadowBlur = 6;
+    ctx.fillStyle = PH.glow; ctx.strokeStyle = PH.glow;
+
+    if (mood === "blink") {
+      ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.moveTo(C + dx - 6, ey); ctx.lineTo(C + dx + 6, ey); ctx.stroke();
+      });
+    } else if (mood === "ouch") {
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey, 6, 0, Math.PI * 2); ctx.fill();
+      });
+    } else if (mood === "laugh") {
+      ctx.lineWidth = 2.6; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey + 2, 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      });
+    } else if (mood === "angry") {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey - 6);
+        ctx.lineTo(C + dx + 7 * side, ey + 2);
+        ctx.lineTo(C + dx - 2 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    } else if (mood === "sad") {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey + 4);
+        ctx.lineTo(C + dx + 7 * side, ey - 3);
+        ctx.lineTo(C + dx - 2 * side, ey - 6);
+        ctx.closePath(); ctx.fill();
+      });
+    } else {
+      // normal — olhos triangulares tipo "abóbora" (jack-o-lantern), a
+      // referência visual mais forte do boss
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey + 5);
+        ctx.lineTo(C + dx + 7 * side, ey - 4);
+        ctx.lineTo(C + dx + 7 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = PH.glow; ctx.shadowBlur = 5;
+    ctx.fillStyle = PH.glow;
+    const my = mood === "sad" ? 45 : 43;
+    if (mood === "laugh") {
+      ctx.beginPath();
+      ctx.moveTo(C - 14, 39); ctx.lineTo(C - 8, 46); ctx.lineTo(C - 2, 39); ctx.lineTo(C + 4, 46);
+      ctx.lineTo(C + 10, 39); ctx.lineTo(C + 14, 44); ctx.lineTo(C + 14, 48);
+      ctx.lineTo(C - 14, 48); ctx.closePath(); ctx.fill();
+    } else if (mood === "ouch") {
+      ctx.beginPath(); ctx.ellipse(C, my, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === "sad") {
+      ctx.lineWidth = 2.4; ctx.strokeStyle = PH.glow; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(C - 12, my + 3); ctx.quadraticCurveTo(C, my - 5, C + 12, my + 3); ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(C - 13, my - 3); ctx.lineTo(C - 7, my + 4); ctx.lineTo(C - 1, my - 3); ctx.lineTo(C + 5, my + 4);
+      ctx.lineTo(C + 11, my - 3); ctx.lineTo(C + 13, my); ctx.lineTo(C + 13, my + 5);
+      ctx.lineTo(C - 13, my + 5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  if (!scene.textures.exists("boss_monstro_phishing")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "wave");
+    drawPhishingFace(ctx, "normal");
     tex.refresh();
   }
-  // Duas variantes novas, só para a animação "idle" (ver doBossIdleArms/
-  // doBossIdleBlink em dia-crianca.js) — o Monstro deixa de ficar
-  // completamente parado fora dos golpes: alterna braços "wave"/"rest" a
-  // espaços regulares e pisca os olhos de vez em quando.
-  if(!scene.textures.exists("boss_monstro_phishing_armsdown")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_armsdown",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "rest");
-    drawMonstroFace(ctx, true);
+  // Duas variantes para a animação "idle" (ver doBossIdleArms/doBossIdleBlink
+  // em dia-crianca.js) — o boss alterna braços "wave"/"rest" a espaços
+  // regulares e pisca os olhos de vez em quando, tal como antes.
+  if (!scene.textures.exists("boss_monstro_phishing_armsdown")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_armsdown", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "rest");
+    drawPhishingFace(ctx, "normal");
     tex.refresh();
   }
-  if(!scene.textures.exists("boss_monstro_phishing_blink")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_blink",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "wave");
-    drawMonstroFace(ctx, false);
+  if (!scene.textures.exists("boss_monstro_phishing_blink")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_blink", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "wave");
+    drawPhishingFace(ctx, "blink");
     tex.refresh();
   }
   // Estado "ouch" — usado por meio segundo sempre que leva um salto na
-  // cabeça: achatamento exagerado tipo desenho animado, olhos esbugalhados,
-  // boca aberta. Volta ao estado normal logo a seguir (não é uma fase — é
-  // só a reação a UM golpe, reaproveitada nos 3 saltos).
-  if(!scene.textures.exists("boss_monstro_phishing_ouch")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_ouch",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "rest");
-    [-16,16].forEach(dx=>{
-      ctx.fillStyle="#fffaff";
-      ctx.beginPath(); ctx.ellipse(C+dx, C-8, 14, 15, 0, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle="#2a1060"; ctx.lineWidth=1.5; ctx.stroke();
-      ctx.fillStyle="#2a1060"; ctx.font="bold 17px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
-      ctx.fillText("?", C+dx, C-6);
-    });
-    ctx.textBaseline="alphabetic";
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=3; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-26,C-30); ctx.lineTo(C-8,C-22); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+8,C-22); ctx.lineTo(C+26,C-30); ctx.stroke();
-    ctx.fillStyle="#2a1060";
-    ctx.beginPath(); ctx.ellipse(C, C+21, 9, 11, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle="#ff9fdc";
-    ctx.beginPath(); ctx.ellipse(C, C+25, 5, 5, 0, 0, Math.PI*2); ctx.fill();
+  // cabeça: olhos redondos e esbugalhados + boca em "o" de surpresa.
+  if (!scene.textures.exists("boss_monstro_phishing_ouch")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_ouch", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "rest");
+    drawPhishingFace(ctx, "ouch");
     tex.refresh();
   }
-  // Estado "riso maléfico" — usado na entrada do combate (intro): antes de
-  // a luta começar a sério, o boss ri-se de forma trocista, confiante que
-  // vai ganhar. Olhos semicerrados de gozo ("^ ^") + boca bem aberta a rir.
-  if(!scene.textures.exists("boss_monstro_phishing_laugh")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_laugh",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "wave");
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=3; ctx.lineCap="round";
-    [-16,16].forEach(dx=>{
-      ctx.beginPath(); ctx.arc(C+dx, C-6, 8, Math.PI*1.15, Math.PI*1.85); ctx.stroke();
-    });
-    ctx.beginPath(); ctx.moveTo(C-28,C-30); ctx.lineTo(C-6,C-24); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+6,C-24); ctx.lineTo(C+28,C-30); ctx.stroke();
-    ctx.fillStyle="#2a1060";
-    ctx.beginPath(); ctx.ellipse(C, C+16, 17, 13, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle="#fffaff";
-    ctx.beginPath(); ctx.ellipse(C, C+9, 13, 4, 0, 0, Math.PI); ctx.fill();
+  // Estado "riso maléfico" — usado na entrada do combate (intro): olhos
+  // semicerrados de gozo + boca bem aberta em zigue-zague, confiante que
+  // vai ganhar.
+  if (!scene.textures.exists("boss_monstro_phishing_laugh")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_laugh", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "wave");
+    drawPhishingFace(ctx, "laugh");
     tex.refresh();
   }
-  // Estado "zangado" (vermelho) — ao escalar de fúria a meio do combate (ver
-  // bossEnterRage em dia-crianca.js), a cara fecha-se em fúria: sobrolho em
-  // V carregado, olhos estreitos. O motor de jogo aplica também um tint
-  // avermelhado por cima deste estado (ver bossEnterRage), daí "vermelho".
-  if(!scene.textures.exists("boss_monstro_phishing_angry")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_angry",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "wave");
-    [-16,16].forEach(dx=>{
-      ctx.fillStyle="#fffaff";
-      ctx.beginPath(); ctx.ellipse(C+dx, C-8, 9, 7, 0, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle="#2a1060"; ctx.beginPath(); ctx.arc(C+dx, C-8, 3.4, 0, Math.PI*2); ctx.fill();
-    });
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=4; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-28,C-24); ctx.lineTo(C-8,C-14); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+8,C-14); ctx.lineTo(C+28,C-24); ctx.stroke();
-    ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(C-16,C+14); ctx.lineTo(C+16,C+14); ctx.stroke();
+  // Estado "zangado" — ao escalar de fúria a meio do combate (ver
+  // bossEnterRage em dia-crianca.js): sobrolhos em V afiados, mais próximos.
+  if (!scene.textures.exists("boss_monstro_phishing_angry")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_angry", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "wave");
+    drawPhishingFace(ctx, "angry");
     tex.refresh();
   }
-  // Estado "triste" — usado na derrota: em vez do "sentado" calmo de antes
-  // (ver comentário em startBossStompDefeat, dia-crianca.js), o boss fica
-  // com pena e foge a correr. Sobrolho preocupado + olhos fechados de
-  // tristeza + boca em "n" invertido (franzida para baixo) + uma lágrima.
-  if(!scene.textures.exists("boss_monstro_phishing_sad")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_sad",S,S), ctx=tex.getContext();
-    drawMonstroBody(ctx);
-    drawMonstroArms(ctx, "rest");
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=3; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-24,C-28); ctx.lineTo(C-8,C-22); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+8,C-22); ctx.lineTo(C+24,C-28); ctx.stroke();
-    [-16,16].forEach(dx=>{
-      ctx.fillStyle="#fffaff";
-      ctx.beginPath(); ctx.ellipse(C+dx, C-8, 10, 11, 0, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle="#2a1060"; ctx.lineWidth=1.5; ctx.stroke();
-      ctx.fillStyle="#2a1060"; ctx.beginPath(); ctx.arc(C+dx, C-4, 3, 0, Math.PI*2); ctx.fill();
-    });
-    ctx.fillStyle="#7fc8ff";
-    ctx.beginPath(); ctx.ellipse(C-16, C+2, 3, 5, 0, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=2.5;
-    ctx.beginPath(); ctx.moveTo(C-14,C+24); ctx.quadraticCurveTo(C,C+13,C+14,C+22); ctx.stroke();
+  // Estado "triste" — usado na derrota, antes de passar ao "sentado":
+  // olhos caídos + boca franzida para baixo.
+  if (!scene.textures.exists("boss_monstro_phishing_sad")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_sad", S, S), ctx = tex.getContext();
+    drawPhishingBody(ctx);
+    drawPhishingArms(ctx, "rest");
+    drawPhishingFace(ctx, "sad");
     tex.refresh();
   }
-  // Estado "sentado" — usado na sequência de derrota: senta-se no chão,
-  // lê um livro que aparece à sua frente e dá um polegar para cima. Não
-  // morre, não explode — só fica contente e simpático, tal como pedido.
-  if(!scene.textures.exists("boss_monstro_phishing_sentado")){
-    const tex=scene.textures.createCanvas("boss_monstro_phishing_sentado",S,S), ctx=tex.getContext();
+  // Estado "sentado" — sequência de derrota simpática: senta-se no chão, o
+  // chapéu cai-lhe ao lado (tombado), acena com a garra e mostra uma cara
+  // feliz no ecrã. Não morre, não explode — só fica simpático, tal como
+  // pedido na versão original deste boss.
+  if (!scene.textures.exists("boss_monstro_phishing_sentado")) {
+    const tex = scene.textures.createCanvas("boss_monstro_phishing_sentado", S, S), ctx = tex.getContext();
     bossShadow(ctx);
-    const gr = ctx.createRadialGradient(C-12,C-8,6,C,C+6,44);
-    gr.addColorStop(0,"#ad82ff"); gr.addColorStop(0.55,"#6a3ad8"); gr.addColorStop(1,"#3a1a80");
-    ctx.fillStyle = gr;
-    ctx.beginPath(); ctx.ellipse(C, C+4, 42, 28, 0, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "#2a1060"; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = "#cdb4ff";
-    ctx.beginPath(); ctx.ellipse(C, C+17, 20, 12, 0, 0, Math.PI*2); ctx.fill();
-    // Pernas cruzadas à frente, sentado
-    ctx.fillStyle = "#6a3ad8"; ctx.strokeStyle="#2a1060"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.ellipse(C-14, C+35, 17, 7, 0.28, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(C+14, C+35, 17, 7, -0.28, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    // Braço junto ao corpo
-    ctx.beginPath(); ctx.ellipse(C-33, C+10, 8, 13, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    // Braço com polegar para cima
-    ctx.beginPath(); ctx.ellipse(C+29, C-4, 8, 15, -0.32, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.fillRect(C+29, C-26, 6, 11);
-    ctx.beginPath(); ctx.arc(C+33, C-18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    // Olhos contentes — curva feliz, em vez de ovais abertos
-    ctx.strokeStyle="#2a1060"; ctx.lineWidth=3; ctx.lineCap="round";
-    ctx.beginPath(); ctx.arc(C-16, C-6, 8, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
-    ctx.beginPath(); ctx.arc(C+16, C-6, 8, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
-    // Sorriso largo e satisfeito
-    ctx.beginPath(); ctx.arc(C, C+12, 14, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+    ctx.fillStyle = PH.cloakMid;
+    ctx.beginPath(); ctx.ellipse(C - 17, C + 35, 18, 8, 0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(C + 17, C + 35, 18, 8, -0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PH.hatDark;
+    [-28, 28].forEach(dx => {
+      ctx.beginPath(); ctx.ellipse(C + dx, C + 39, 9, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = PH.trim; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(C + dx - 7, C + 39); ctx.lineTo(C + dx + 7, C + 39); ctx.stroke();
+      ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+    });
+
+    const gradSit = ctx.createLinearGradient(0, C - 10, 0, C + 28);
+    gradSit.addColorStop(0, PH.cloakLight);
+    gradSit.addColorStop(0.55, PH.cloakMid);
+    gradSit.addColorStop(1, PH.cloakDark);
+    ctx.fillStyle = gradSit;
+    ctx.beginPath(); ctx.ellipse(C, C + 10, 35, 22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.4; ctx.stroke();
+
+    ctx.fillStyle = PH.belt;
+    ctx.beginPath(); ctx.roundRect(C - 26, C + 4, 52, 8, 3); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.fillStyle = PH.envelope;
+    ctx.beginPath(); ctx.roundRect(C - 10, C - 8, 20, 14, 2); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(C - 10, C - 8); ctx.lineTo(C, C); ctx.lineTo(C + 10, C - 8); ctx.stroke();
+
+    // braço relaxado (esquerdo)
+    ctx.fillStyle = PH.cloakMid; ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.ellipse(C - 32, C + 14, 8, 14, 0.15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PH.claw;
+    ctx.beginPath(); ctx.arc(C - 35, C + 26, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // braço a acenar (direito) — saudação amigável
+    ctx.fillStyle = PH.cloakMid;
+    ctx.beginPath(); ctx.ellipse(C + 31, C + 2, 8, 15, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PH.claw;
+    ctx.beginPath(); ctx.ellipse(C + 39, C - 12, 7, 9, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    drawClawFinger(ctx, C + 41, C - 18, -Math.PI * 0.6, 13, 5.5);
+
+    drawPhishingScreen(ctx, 4);
+
+    // chapéu tombado ao lado, no chão — a piada visual de "derrota simpática"
+    ctx.save();
+    ctx.translate(C - 46, C + 40);
+    ctx.rotate(-0.5);
+    ctx.fillStyle = PH.hatDark;
+    ctx.beginPath(); ctx.ellipse(0, 0, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -4, 10, 7, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    // cara feliz — olhos curvos + sorriso largo, a brilhar
+    ctx.save();
+    ctx.shadowColor = PH.glow; ctx.shadowBlur = 6;
+    ctx.strokeStyle = PH.glow; ctx.lineWidth = 2.6; ctx.lineCap = "round";
+    [-15, 15].forEach(dx => {
+      ctx.beginPath(); ctx.arc(C + dx, 36, 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+    });
+    ctx.fillStyle = PH.glow;
+    ctx.beginPath();
+    ctx.moveTo(C - 12, 44); ctx.quadraticCurveTo(C, 52, C + 12, 44);
+    ctx.quadraticCurveTo(C, 49, C - 12, 44);
+    ctx.fill();
+    ctx.restore();
     tex.refresh();
   }
 
@@ -1391,6 +1620,32 @@ function makeBossTextures(scene){
     ctx.fillStyle="#fff8ff"; ctx.font="bold 15px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.fillText("?", w/2, h/2+1);
     ctx.textBaseline="alphabetic";
+    tex.refresh();
+  }
+
+  // ── Anzol do Monstro do Phishing (novo, redesenho "pirata-hacker") — a
+  // bola "?" roxa acima ficou associada ao Monstro do Phishing desde o
+  // início, mas agora destoava da nova paleta azul-marinho/ciano do boss
+  // (ver makeBossTextures acima) e, tal como aconteceu com o Vírus Gigante/
+  // Espião das Sombras/Robô do Spam antes dele, também não tinha sentido
+  // temático nenhum para este boss em particular. Um anzol prateado a
+  // brilhar em ciano — a mesma "isca" que a cana de pesca segura — é a
+  // metáfora óbvia de "morde o isco e é fisgado" que faltava.
+  if(!scene.textures.exists("boss_proj_hook")){
+    const w=30,h=30,tex=scene.textures.createCanvas("boss_proj_hook",w,h), ctx=tex.getContext();
+    ctx.save();
+    ctx.shadowColor="#39d6ff"; ctx.shadowBlur=6;
+    ctx.strokeStyle="#eef2f7"; ctx.lineWidth=3.4; ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.moveTo(15,4);
+    ctx.lineTo(15,17);
+    ctx.arc(19,17,4,Math.PI,Math.PI*0.1,true);
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle="#8f9ab0"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(15,5,2.6,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle="#182a56";
+    ctx.beginPath(); ctx.arc(15,5,1.3,0,Math.PI*2); ctx.fill();
     tex.refresh();
   }
 
