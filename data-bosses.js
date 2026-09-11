@@ -126,7 +126,10 @@ export const BOSSES = [
                                // palavras-passe, dados pessoais, instituições de apoio, vírus).
     name: "Vírus Gigante",
     emoji: "🦠",
-    color: 0xe0409a,
+    // Cor alinhada com o redesenho "robô-vírus" (ver makeBossTextures em
+    // textures.js) — antes era rosa (0xe0409a), a cor da esfera antiga;
+    // agora é o vermelho do brilho da cara/garras/tentáculos do novo boss.
+    color: 0xff4030,
     // Convertido para o mesmo "boss clássico à Mario" do Monstro da
     // Ignorância (ver esse comentário para a filosofia completa): arena do
     // tamanho da janela, sem scroll, e uma mecânica só — saltar-lhe em cima
@@ -174,15 +177,22 @@ export const BOSSES = [
     qmarkEvery: 3400,
     forceFirstOrbRight: true, // pedido: o 1º ataque deste boss vai sempre para a direita — só a partir do 2º persegue mesmo o VanBerto's
     orbTexture: "boss_proj_germ", // micróbio com espigões — antes reutilizava a bola "?" do Monstro, sem sentido temático para um vírus
-    orbTint: 0xe0409a,       // rosa, a condizer com o próprio Vírus
-    // bossY: mesmo raciocínio do Monstro — chão da arena (topo em y=506)
-    // menos metade do corpo desenhado. O Vírus é uma esfera com espigões,
-    // sem "pés": medi o pixel mais baixo do desenho (~44px abaixo do centro
-    // do canvas de 116px) em vez de adivinhar, tal como fiz para o Monstro.
-    // 506 - 44*1.5 = 440.
-    bossY: 440,
+    // orbTint: era rosa (0xe0409a, a condizer com a esfera antiga) — agora
+    // vermelho, a condizer com o redesenho "robô-vírus".
+    orbTint: 0xff4030,
+    // bossY: recalculado com o redesenho "robô-vírus" (ver makeBossTextures
+    // em textures.js) — a esfera antiga não tinha pernas (pixel mais baixo
+    // a ~44px do centro); agora tem botas, tal como os outros 3 bosses, com
+    // os pés exactamente na mesma posição da família (~49px abaixo do
+    // centro × bossScale 1.5 ≈ 73,5 → 506-73,5≈433).
+    bossY: 433,
     bossScale: 1.5,
-    hpBarOffset: 88,          // idem — medido a partir do topo real do desenho, não do canvas inteiro
+    // hpBarOffset: também recalculado — a bola vírica espinhosa no topo da
+    // cabeça chega quase ao topo da tela (116px), tal como o chapéu do
+    // Monstro do Phishing ou o capuz do Espião das Sombras, por isso usa a
+    // mesma folga (96) em vez do valor antigo (88, medido para a esfera
+    // sem nada por cima).
+    hpBarOffset: 96,
     signY: 486,
     // signX: centro da plataforma baixa esquerda (x=200, ver arena.platforms
     // abaixo) — mesma lógica aplicada ao Monstro do Phishing: o letreiro

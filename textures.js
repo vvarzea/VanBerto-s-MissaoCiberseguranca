@@ -970,188 +970,342 @@ function makeBossTextures(scene){
     tex.refresh();
   }
 
-  // ── 2) Vírus Gigante — "vírus digital corrompido", não biológico ────
-  // Redesenhado a pedido: a versão anterior (esfera rosa/magenta com
-  // espigões estilo coronavírus) lia-se demasiado como um vírus humano.
-  // Agora é um "bug de malware": base escura com fissuras cor de âmbar
-  // tipo circuito, espigões angulares (pixels/fragmentos de código em
-  // vez de proteínas orgânicas) e barras de "glitch" em vez de manchas.
-  // Corpo/braços/cara separados em helpers (mesmo padrão do Monstro da
-  // Ignorância) para gerar as variantes "_armsdown"/"_blink"/"_ouch" sem
-  // duplicar o desenho todo — dá-lhe a mesma vivacidade (braços/olhos) que
-  // só o Monstro tinha antes.
-  function drawVirusBody(ctx){
-    bossShadow(ctx);
-    const bodyR=28;
-    // brilho exterior âmbar — o nível dele é todo em tons de verde-água
-    // escuro, por isso o corpo é âmbar/preto (forte contraste), e este
-    // anel garante que se destaca também de qualquer outro fundo escuro.
-    ctx.shadowColor="rgba(255,190,80,0.55)"; ctx.shadowBlur=14;
-    ctx.strokeStyle="rgba(255,205,100,0.65)"; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(C,C,bodyR+15,0,Math.PI*2); ctx.stroke();
-    ctx.shadowBlur=0;
-    // espigões
-    ctx.strokeStyle="#5c3000"; ctx.lineWidth=3.5; ctx.lineCap="round";
-    const spikes=12;
-    for(let i=0;i<spikes;i++){
-      const a=(Math.PI*2*i)/spikes;
-      const x1=C+Math.cos(a)*bodyR, y1=C+Math.sin(a)*bodyR;
-      const x2=C+Math.cos(a)*(bodyR+13), y2=C+Math.sin(a)*(bodyR+13);
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-      // ponta angular tipo "pixel/fragmento de código" em vez de bolinha orgânica
-      ctx.save(); ctx.translate(x2,y2); ctx.rotate(a+Math.PI/4);
-      ctx.fillStyle= i%2===0 ? "#ffd23f" : "#40e0ff";
-      ctx.fillRect(-3.4,-3.4,6.8,6.8);
-      ctx.restore();
-    }
-    // corpo — âmbar/preto tipo "dado corrompido" (contraste com o fundo verde-água do nível)
-    const gr=ctx.createRadialGradient(C-8,C-8,3,C,C,bodyR);
-    gr.addColorStop(0,"#ffe8b0"); gr.addColorStop(0.45,"#a85a00"); gr.addColorStop(1,"#1c0d00");
-    ctx.fillStyle=gr;
-    ctx.beginPath(); ctx.arc(C,C,bodyR,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle="#0a0400"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(C,C,bodyR,0,Math.PI*2); ctx.stroke();
-    // padrão interior — pixels de corrupção (em vez de manchas orgânicas)
+  // ── 2) Vírus Gigante — redesenho "robô-vírus" (pedido: aproximar a
+  // aparência de uma imagem de referência fornecida pelo Berto, a mesma
+  // leva das referências usadas para os outros 3 bosses) ─────────────────
+  // Versão anterior: uma esfera âmbar/preta com espigões angulares tipo
+  // "pixel corrompido" e dois pseudópodes finos — lia-se bem como "vírus
+  // digital" mas não tinha nenhuma relação de família com os outros 3
+  // bosses (screen-head + capa/corpo + garras). Nova versão: usa a mesma
+  // "receita" (corpo robótico + cabeça-ecrã com cara maléfica + garras
+  // grandes) em tons vermelho/preto, com uma bola vírica espinhosa presa
+  // atrás da cabeça como "capacete" (o mesmo slot que o chapéu de pirata do
+  // Monstro do Phishing ou o capuz do Espião das Sombras) e 4 tentáculos-
+  // cabo com fichas USB na ponta a saírem de trás dos ombros — a app
+  // “é um vírus que infeta hardware”, não um organismo biológico.
+  // Continua "stompBoss" com movimento em onda (flutua/pulsa) — só a pele
+  // muda, tal como nos outros 3.
+  //
+  // Paleta própria (VG), irmã das paletas PH/SH — vermelho/preto em vez de
+  // azul-ciano ou roxo-magenta, a condizer com o "perigo/infeção" do vírus.
+  const VG = {
+    bodyDark:  "#0e0e14",
+    bodyMid:   "#1c1c26",
+    bodyLight: "#33333f",
+    glow:      "#ff4030",
+    glow2:     "#ffb020",
+    screenBg:  "#100608",
+    frame:     "#8a8a96",
+    frameDark: "#3c3c46",
+    claw:      "#151018",
+    clawGlow:  "#ff4030",
+    virusBody: "#c7291f",
+    virusDark: "#7a140e",
+    panel:     "#18080a"
+  };
+
+  // Lâmina de garra — mesma técnica das outras 3 famílias (drawClawFinger),
+  // aqui com o brilho a acender a vermelho em vez de ciano/magenta.
+  function drawVirusClawFinger(ctx, wx, wy, angle, len, width) {
     ctx.save();
-    ctx.beginPath(); ctx.arc(C,C,bodyR,0,Math.PI*2); ctx.clip();
-    ctx.fillStyle="rgba(140,70,0,0.35)";
-    [[-10,-6,6],[9,-11,4],[6,9,5],[-8,10,4]].forEach(([dx,dy,r])=>{
-      ctx.beginPath(); ctx.arc(C+dx,C+dy,r,0,Math.PI*2); ctx.fill();
-    });
-    // linhas de "glitch" (efeito de corrupção digital tipo VHS)
-    ctx.globalAlpha=0.55;
-    [[-13,-9,10,3],[-16,4,14,2.4],[-11,15,11,2]].forEach(([dx,dy,w,h])=>{
-      const x=C+dx, y=C+dy;
-      ctx.fillStyle="#ffd23f"; ctx.fillRect(x,y-0.6,w,h*0.35);
-      ctx.fillStyle="#40e0ff"; ctx.fillRect(x+2,y+1.2,w,h*0.35);
-    });
-    ctx.globalAlpha=1;
+    ctx.translate(wx, wy);
+    ctx.rotate(angle);
+    const grad = ctx.createLinearGradient(0, 0, len, 0);
+    grad.addColorStop(0, VG.claw);
+    grad.addColorStop(0.6, VG.claw);
+    grad.addColorStop(1, VG.clawGlow);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -width / 2);
+    ctx.quadraticCurveTo(len * 0.3, -width * 0.4, len * 0.72, -width * 0.08);
+    ctx.lineTo(len, 0);
+    ctx.lineTo(len * 0.72, width * 0.08);
+    ctx.quadraticCurveTo(len * 0.3, width * 0.4, 0, width / 2);
+    ctx.closePath();
+    ctx.save();
+    ctx.shadowColor = VG.clawGlow; ctx.shadowBlur = 5;
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,64,48,0.55)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(len * 0.34, -width * 0.3); ctx.lineTo(len * 0.34, width * 0.3); ctx.stroke();
     ctx.restore();
   }
-  // Dois pseudópodes finos (tentáculos) que saem do corpo — "wave" esticados
-  // para cima/fora como se acenassem, "rest" a pender ao longo do corpo.
-  function drawVirusArms(ctx, mood){
-    const bodyR=28;
-    ctx.lineCap="round";
-    if (mood === "wave") {
-      [-1,1].forEach(side=>{
-        const bx=C+side*bodyR*0.7, by=C+bodyR*0.5;
-        const tx=C+side*(bodyR+21), ty=C-bodyR*0.25;
-        ctx.strokeStyle="#a85a00"; ctx.lineWidth=7;
-        ctx.beginPath(); ctx.moveTo(bx,by); ctx.quadraticCurveTo(C+side*(bodyR+9), C+bodyR*0.05, tx, ty); ctx.stroke();
-        ctx.fillStyle="#a85a00";
-        ctx.beginPath(); ctx.arc(tx,ty,6.5,0,Math.PI*2); ctx.fill();
-        ctx.strokeStyle="#5c3000"; ctx.lineWidth=1.5; ctx.stroke();
-      });
-    } else {
-      [-1,1].forEach(side=>{
-        const bx=C+side*bodyR*0.72, by=C+bodyR*0.35;
-        const tx=C+side*bodyR*0.92, ty=C+bodyR*1.05;
-        ctx.strokeStyle="#a85a00"; ctx.lineWidth=6;
-        ctx.beginPath(); ctx.moveTo(bx,by); ctx.quadraticCurveTo(C+side*bodyR*1.05, C+bodyR*0.7, tx, ty); ctx.stroke();
-        ctx.fillStyle="#a85a00";
-        ctx.beginPath(); ctx.arc(tx,ty,5.5,0,Math.PI*2); ctx.fill();
-        ctx.strokeStyle="#5c3000"; ctx.lineWidth=1.5; ctx.stroke();
-      });
-    }
-  }
-  // eyesOpen=false pisca (curva fechada em vez da elipse branca) — boca
-  // mantém-se igual, tal como no Monstro, para não "saltar" ao piscar.
-  function drawVirusFace(ctx, eyesOpen){
-    if (eyesOpen) {
-      ctx.fillStyle="#fff";
-      ctx.beginPath(); ctx.ellipse(C-8,C-2,5,6,0,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(C+8,C-2,5,6,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle="#1c0d00";
-      ctx.beginPath(); ctx.arc(C-8,C,2.4,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(C+8,C,2.4,0,Math.PI*2); ctx.fill();
-    } else {
-      ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2.5; ctx.lineCap="round";
-      [-8,8].forEach(dx=>{
-        ctx.beginPath(); ctx.moveTo(C+dx-5,C-1); ctx.quadraticCurveTo(C+dx,C+3,C+dx+5,C-1); ctx.stroke();
-      });
-    }
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(C,C+11,7,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
-  }
-  if(!scene.textures.exists("boss_virus_gigante")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"wave"); drawVirusFace(ctx,true);
-    tex.refresh();
-  }
-  if(!scene.textures.exists("boss_virus_gigante_armsdown")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_armsdown",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"rest"); drawVirusFace(ctx,true);
-    tex.refresh();
-  }
-  if(!scene.textures.exists("boss_virus_gigante_blink")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_blink",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"wave"); drawVirusFace(ctx,false);
-    tex.refresh();
-  }
-  // "ouch" — espigões a tremer visualmente (olhos em espiral) + boca aberta
-  // de choque + tentáculos em repouso, mesmo espírito exagerado do Monstro.
-  if(!scene.textures.exists("boss_virus_gigante_ouch")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_ouch",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"rest");
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2;
-    [-8,8].forEach(dx=>{
-      ctx.beginPath();
-      for(let a=0;a<=Math.PI*2.4;a+=0.4){
-        const r=1+a*0.7, px=C+dx+Math.cos(a)*r, py=C-2+Math.sin(a)*r;
-        a===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-    });
-    ctx.fillStyle="#1c0d00";
-    ctx.beginPath(); ctx.ellipse(C,C+13,6,8,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="#ffd23f";
-    ctx.beginPath(); ctx.ellipse(C,C+16,3,4,0,0,Math.PI*2); ctx.fill();
-    tex.refresh();
+
+  function drawVirusClawHand(ctx, wx, wy, spread) {
+    ctx.fillStyle = VG.bodyMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.ellipse(wx, wy, 13, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    drawVirusClawFinger(ctx, wx - 4, wy - 14, -0.6 * spread, 22, 9.5);
+    drawVirusClawFinger(ctx, wx - 6, wy + 1, -0.08 * spread, 25, 10.5);
+    drawVirusClawFinger(ctx, wx - 4, wy + 15, 0.48 * spread, 21, 9.5);
   }
 
-  // Estado "riso maléfico" — entrada em combate: convencido, quase a
-  // rir-se antes mesmo de começar a lutar.
-  if(!scene.textures.exists("boss_virus_gigante_laugh")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_laugh",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"wave");
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2.5; ctx.lineCap="round";
-    [-8,8].forEach(dx=>{
-      ctx.beginPath(); ctx.arc(C+dx, C-3, 5, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+  // Tentáculo-cabo: um cabo curvo com uma ficha USB na ponta (em vez de uma
+  // ventosa/pseudópode orgânico) — reforça "vírus de hardware/software",
+  // não biológico. Curva-se para fora e para cima como uma hidra.
+  function drawVirusTentacle(ctx, x0, y0, x1, y1, x2, y2) {
+    ctx.strokeStyle = VG.bodyDark; ctx.lineWidth = 5; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x1, y1, x2, y2); ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = VG.glow; ctx.shadowBlur = 3;
+    ctx.strokeStyle = VG.glow; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x1, y1, x2, y2); ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(x2, y2);
+    ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
+    ctx.fillStyle = "#5a5a66";
+    ctx.beginPath(); ctx.roundRect(-2, -5, 10, 10, 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = VG.glow;
+    ctx.fillRect(0, -2.5, 5, 5);
+    ctx.restore();
+  }
+
+  // Bola vírica espinhosa, presa atrás/acima do ecrã — o "capacete" deste
+  // boss, no mesmo slot visual do chapéu de pirata (Monstro do Phishing) ou
+  // do capuz (Espião das Sombras).
+  function drawVirusCrown(ctx) {
+    const cx = C + 10, cy = 19, r = 10;
+    ctx.save();
+    for (let i = 0; i < 9; i++) {
+      const a = (Math.PI * 2 * i) / 9;
+      const x1 = cx + Math.cos(a) * r, y1 = cy + Math.sin(a) * r;
+      const x2 = cx + Math.cos(a) * (r + 6), y2 = cy + Math.sin(a) * (r + 6);
+      ctx.strokeStyle = VG.virusDark; ctx.lineWidth = 3.2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.fillStyle = VG.virusBody;
+      ctx.beginPath(); ctx.arc(x2, y2, 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+    const grad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, r);
+    grad.addColorStop(0, "#ff8a70"); grad.addColorStop(0.5, VG.virusBody); grad.addColorStop(1, VG.virusDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.restore();
+  }
+
+  // Cabeça-ecrã — mesma moldura da família (Monstro do Phishing/Espião das
+  // Sombras), com pixels de "glitch" âmbar nos cantos em vez de lisa.
+  function drawVirusScreen(ctx) {
+    ctx.fillStyle = VG.frameDark;
+    ctx.beginPath(); ctx.roundRect(C - 24, 20, 48, 36, 8); ctx.fill();
+    ctx.fillStyle = VG.frame;
+    ctx.beginPath(); ctx.roundRect(C - 22, 22, 44, 32, 7); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = VG.screenBg;
+    ctx.beginPath(); ctx.roundRect(C - 18, 26, 36, 24, 5); ctx.fill();
+    ctx.save();
+    ctx.shadowColor = VG.glow; ctx.shadowBlur = 9;
+    ctx.strokeStyle = "rgba(255,64,48,0.5)"; ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = VG.glow2;
+    [[C - 22, 22], [C + 18, 22], [C - 22, 50], [C + 18, 50]].forEach(([x, y]) => {
+      ctx.fillRect(x, y, 4, 4);
     });
-    ctx.fillStyle="#1c0d00";
-    ctx.beginPath(); ctx.ellipse(C,C+13,9,7,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="#ffd23f";
-    ctx.beginPath(); ctx.ellipse(C,C+9,6,2.4,0,0,Math.PI); ctx.fill();
+  }
+
+  // Torso robótico — bloco mecânico com ombros redondos e um painel de
+  // peito com um ícone de vírus e linhas tipo circuito a irradiar, em vez
+  // da capa/manto das outras 3 famílias (este boss não é "robed").
+  function drawVirusTorso(ctx) {
+    const grad = ctx.createLinearGradient(0, C - 4, 0, C + 30);
+    grad.addColorStop(0, VG.bodyLight);
+    grad.addColorStop(0.55, VG.bodyMid);
+    grad.addColorStop(1, VG.bodyDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(C - 27, C - 6, 54, 36, 8); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4; ctx.stroke();
+    [-30, 30].forEach(dx => {
+      ctx.fillStyle = VG.bodyLight;
+      ctx.beginPath(); ctx.arc(C + dx, C, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 1.8; ctx.stroke();
+    });
+    ctx.fillStyle = VG.panel;
+    ctx.beginPath(); ctx.roundRect(C - 15, C + 2, 30, 20, 3); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = VG.glow; ctx.shadowBlur = 4;
+    ctx.strokeStyle = VG.glow; ctx.lineWidth = 1.3;
+    [[-13, 12, -2, 7], [13, 12, 2, 7], [-13, 18, -3, 15], [13, 18, 3, 15]].forEach(([x1, y1, x2, y2]) => {
+      ctx.beginPath(); ctx.moveTo(C + x1, C + y1); ctx.lineTo(C + x2, C + y2); ctx.stroke();
+    });
+    ctx.fillStyle = VG.glow;
+    ctx.beginPath(); ctx.arc(C, C + 12, 3.6, 0, Math.PI * 2); ctx.fill();
+    [0, 1, 2, 3].forEach(i => {
+      const a = (Math.PI * 2 * i) / 4 + Math.PI / 4;
+      ctx.beginPath(); ctx.arc(C + Math.cos(a) * 3.6, C + 12 + Math.sin(a) * 3.6, 1, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  // Botas — mesma construção da família (Monstro do Phishing/Espião das
+  // Sombras). Pés a C+49 abaixo do centro — ver bossY em data-bosses.js.
+  function drawVirusLegs(ctx) {
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    [-15, 15].forEach(dx => {
+      ctx.fillStyle = VG.bodyMid;
+      ctx.beginPath(); ctx.roundRect(C + dx - 6, C + 26, 12, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = VG.bodyDark;
+      ctx.beginPath(); ctx.roundRect(C + dx - 11, C + 36, 22, 13, 4); ctx.fill(); ctx.stroke();
+      ctx.save();
+      ctx.shadowColor = VG.glow; ctx.shadowBlur = 4;
+      ctx.strokeStyle = VG.glow; ctx.lineWidth = 1.8; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(C + dx - 5, C + 42.5); ctx.lineTo(C + dx + 5, C + 42.5); ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawVirusBody(ctx) {
+    bossShadow(ctx);
+    drawVirusLegs(ctx);
+    drawVirusTorso(ctx);
+    // tentáculos atrás do corpo, antes do ecrã, para o ecrã lhes tapar as
+    // raízes e a "hidra" parecer sair de trás da cabeça/ombros
+    drawVirusTentacle(ctx, C - 24, C - 2, C - 46, C - 28, C - 38, C - 48);
+    drawVirusTentacle(ctx, C - 20, C - 6, C - 48, C - 4, C - 53, C + 12);
+    drawVirusTentacle(ctx, C + 24, C - 2, C + 46, C - 28, C + 38, C - 48);
+    drawVirusTentacle(ctx, C + 20, C - 6, C + 48, C - 4, C + 53, C + 12);
+    drawVirusScreen(ctx);
+    drawVirusCrown(ctx);
+  }
+
+  // Braços: "wave" = as duas garras estendidas, "rest" = mangas simples com
+  // garra pequena — mesma gramática das outras 3 famílias.
+  function drawVirusArms(ctx, mood) {
+    if (mood === "wave") {
+      ctx.fillStyle = VG.bodyMid; ctx.strokeStyle = "#000"; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(C - 28, C + 8, 12, 17, -0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(C + 28, C + 8, 12, 17, 0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      drawVirusClawHand(ctx, C - 30, C + 6, -1);
+      drawVirusClawHand(ctx, C + 30, C + 6, 1);
+    } else {
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 2.2;
+      [-30, 30].forEach(dx => {
+        ctx.fillStyle = VG.bodyMid;
+        ctx.beginPath(); ctx.ellipse(C + dx, C + 10, 8, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = VG.claw;
+        ctx.beginPath(); ctx.arc(C + dx, C + 22, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.save();
+        ctx.shadowColor = VG.glow; ctx.shadowBlur = 3;
+        ctx.fillStyle = VG.glow;
+        ctx.beginPath(); ctx.arc(C + dx, C + 22, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+    }
+  }
+
+  // Cara — mesma gramática das outras 3 famílias (drawPhishingFace/
+  // drawGuardiaoFace), em vermelho em vez de ciano/magenta.
+  function drawVirusFace(ctx, mood) {
+    const ex = 15, ey = 36;
+    ctx.save();
+    ctx.shadowColor = VG.glow; ctx.shadowBlur = 6;
+    ctx.fillStyle = VG.glow; ctx.strokeStyle = VG.glow;
+
+    if (mood === "blink") {
+      ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.moveTo(C + dx - 6, ey); ctx.lineTo(C + dx + 6, ey); ctx.stroke();
+      });
+    } else if (mood === "ouch") {
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey, 6, 0, Math.PI * 2); ctx.fill();
+      });
+    } else if (mood === "laugh") {
+      ctx.lineWidth = 2.6; ctx.lineCap = "round";
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey + 2, 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      });
+    } else if (mood === "angry") {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey - 6);
+        ctx.lineTo(C + dx + 7 * side, ey + 2);
+        ctx.lineTo(C + dx - 2 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    } else if (mood === "sad") {
+      ctx.lineWidth = 2; ctx.globalAlpha = 0.35;
+      [-ex, ex].forEach(dx => {
+        ctx.beginPath(); ctx.arc(C + dx, ey + 2, 4, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    } else {
+      [-ex, ex].forEach(dx => {
+        const side = dx < 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(C + dx - 7 * side, ey + 5);
+        ctx.lineTo(C + dx + 7 * side, ey - 4);
+        ctx.lineTo(C + dx + 7 * side, ey + 6);
+        ctx.closePath(); ctx.fill();
+      });
+    }
+    ctx.restore();
+    if (mood === "sad") return;
+
+    ctx.save();
+    ctx.shadowColor = VG.glow; ctx.shadowBlur = 5;
+    ctx.fillStyle = VG.glow;
+    const my = 47;
+    if (mood === "laugh") {
+      ctx.beginPath();
+      ctx.moveTo(C - 14, 43); ctx.lineTo(C - 8, 50); ctx.lineTo(C - 2, 43); ctx.lineTo(C + 4, 50);
+      ctx.lineTo(C + 10, 43); ctx.lineTo(C + 14, 48); ctx.lineTo(C + 14, 52);
+      ctx.lineTo(C - 14, 52); ctx.closePath(); ctx.fill();
+    } else if (mood === "ouch") {
+      ctx.beginPath(); ctx.ellipse(C, my, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(C - 13, my - 3); ctx.lineTo(C - 7, my + 4); ctx.lineTo(C - 1, my - 3); ctx.lineTo(C + 5, my + 4);
+      ctx.lineTo(C + 11, my - 3); ctx.lineTo(C + 13, my); ctx.lineTo(C + 13, my + 5);
+      ctx.lineTo(C - 13, my + 5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  if (!scene.textures.exists("boss_virus_gigante")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "wave"); drawVirusFace(ctx, "normal");
     tex.refresh();
   }
-  // Estado "zangado" (vermelho) — durante a escalada de fúria; o motor de
-  // jogo aplica também um tint avermelhado por cima deste estado.
-  if(!scene.textures.exists("boss_virus_gigante_angry")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_angry",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"wave");
-    ctx.fillStyle="#1c0d00";
-    ctx.beginPath(); ctx.ellipse(C-8,C-2,4.5,3,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(C+8,C-2,4.5,3,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=3; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(C-14,C-10); ctx.lineTo(C-3,C-5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C+3,C-5); ctx.lineTo(C+14,C-10); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C-9,C+12); ctx.lineTo(C-4,C+9); ctx.lineTo(C,C+13); ctx.lineTo(C+4,C+9); ctx.lineTo(C+9,C+12); ctx.stroke();
+  if (!scene.textures.exists("boss_virus_gigante_armsdown")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_armsdown", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "rest"); drawVirusFace(ctx, "normal");
     tex.refresh();
   }
-  // Estado "triste" — derrota: perde o brilho e foge, em vez de continuar
-  // no combate.
-  if(!scene.textures.exists("boss_virus_gigante_sad")){
-    const tex=scene.textures.createCanvas("boss_virus_gigante_sad",S,S), ctx=tex.getContext();
-    drawVirusBody(ctx); drawVirusArms(ctx,"rest");
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2.5; ctx.lineCap="round";
-    [-8,8].forEach(dx=>{
-      ctx.beginPath(); ctx.arc(C+dx, C+1, 5, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
-    });
-    ctx.fillStyle="#7fc8ff";
-    ctx.beginPath(); ctx.ellipse(C-8,C+5,2.4,4,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle="#1c0d00"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(C-6,C+16); ctx.quadraticCurveTo(C,C+10,C+6,C+15); ctx.stroke();
+  if (!scene.textures.exists("boss_virus_gigante_blink")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_blink", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "rest"); drawVirusFace(ctx, "blink");
+    tex.refresh();
+  }
+  // "ouch" — usado por meio segundo sempre que leva um salto na cabeça.
+  if (!scene.textures.exists("boss_virus_gigante_ouch")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_ouch", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "wave"); drawVirusFace(ctx, "ouch");
+    tex.refresh();
+  }
+  // Estado "riso maléfico" — entrada em combate.
+  if (!scene.textures.exists("boss_virus_gigante_laugh")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_laugh", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "rest"); drawVirusFace(ctx, "laugh");
+    tex.refresh();
+  }
+  // Estado "zangado" — durante a escalada de fúria; o motor de jogo aplica
+  // também um tint avermelhado por cima deste estado.
+  if (!scene.textures.exists("boss_virus_gigante_angry")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_angry", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "wave"); drawVirusFace(ctx, "angry");
+    tex.refresh();
+  }
+  // Estado "triste" — derrota: o brilho da cara apaga-se quase todo antes
+  // de fugir, tal como o Espião das Sombras.
+  if (!scene.textures.exists("boss_virus_gigante_sad")) {
+    const tex = scene.textures.createCanvas("boss_virus_gigante_sad", S, S), ctx = tex.getContext();
+    drawVirusBody(ctx); drawVirusArms(ctx, "rest"); drawVirusFace(ctx, "sad");
     tex.refresh();
   }
 
@@ -1553,27 +1707,34 @@ function makeBossTextures(scene){
   // como convém a um robô industrial pesado.
   function drawPoluidorBody(ctx){
     bossShadow(ctx);
-    // envelopes de spam a transbordar da tampa da caixa de correio —
-    // identifica-o de imediato como o Robô do Spam.
-    [[C-2,C-40,0.5],[C+6,C-49,0.42],[C-7,C-58,0.32]].forEach(([x,y,a])=>{
-      ctx.save(); ctx.globalAlpha=a; ctx.translate(x,y); ctx.rotate((x%5)*0.1);
-      ctx.fillStyle="#fffaff";
-      ctx.beginPath(); ctx.roundRect(-7,-5,14,10,1.5); ctx.fill();
-      ctx.strokeStyle="#d43a2f"; ctx.lineWidth=1; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-7,-5); ctx.lineTo(0,1); ctx.lineTo(7,-5); ctx.stroke();
+    // envelopes de spam a transbordar da tampa — mais vívidos/coloridos e
+    // maiores que antes (pedido: aproximar de uma ilustração de
+    // referência), para ler como "a entupir" em vez de um sussurro pálido.
+    [[C-14,C-42,-0.3,"#e8352a"],[C-2,C-48,0.15,"#fffaff"],[C+10,C-43,-0.15,"#2c5aa0"],
+     [C+2,C-53,0.35,"#fffaff"],[C-10,C-54,-0.25,"#e8352a"]].forEach(([x,y,a,col])=>{
+      ctx.save(); ctx.translate(x,y); ctx.rotate(a);
+      ctx.fillStyle=col;
+      ctx.beginPath(); ctx.roundRect(-8,-6,16,11,1.5); ctx.fill();
+      ctx.strokeStyle="#3a0a06"; ctx.lineWidth=1.2; ctx.stroke();
+      ctx.strokeStyle = col==="#fffaff" ? "#c7291f" : "rgba(255,255,255,0.85)";
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(-8,-6); ctx.lineTo(0,1.5); ctx.lineTo(8,-6); ctx.stroke();
       ctx.restore();
     });
-    // tampa da caixa de correio — telhadinho vermelho inclinado no topo,
-    // com o envelope branco gravado, como uma caixa de correio gigante.
+    // tampa da caixa de correio — maior e com uma aba interior mais escura
+    // por baixo do rebordo, para ler como "aberta em 3D" em vez de um
+    // telhadinho plano.
     ctx.fillStyle="#c72a20";
     ctx.beginPath();
-    ctx.moveTo(C-19,C-30); ctx.lineTo(C+19,C-30); ctx.lineTo(C+14,C-42); ctx.lineTo(C-14,C-42);
+    ctx.moveTo(C-22,C-30); ctx.lineTo(C+22,C-30); ctx.lineTo(C+15,C-45); ctx.lineTo(C-15,C-45);
     ctx.closePath(); ctx.fill();
     ctx.strokeStyle="#7a140e"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#8a1a12";
+    ctx.beginPath(); ctx.moveTo(C-15,C-45); ctx.lineTo(C+15,C-45); ctx.lineTo(C+15,C-41); ctx.lineTo(C-15,C-41); ctx.closePath(); ctx.fill();
     ctx.fillStyle="#fffaff";
-    ctx.beginPath(); ctx.roundRect(C-8,C-39,16,7,1); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(C-8,C-41,16,7,1); ctx.fill();
     // fresta escura por baixo da tampa (a "boca" por onde sai o spam)
-    ctx.fillStyle="#3a0a06"; ctx.fillRect(C-16,C-31,32,4);
+    ctx.fillStyle="#3a0a06"; ctx.fillRect(C-18,C-31,36,4);
     // corpo — caixa metálica, gradiente vermelho vivo com mais contraste
     const gr=ctx.createLinearGradient(C-30,C-22,C+30,C+26);
     gr.addColorStop(0,"#e8564a"); gr.addColorStop(0.5,"#c7291f"); gr.addColorStop(1,"#7a140e");
@@ -1668,31 +1829,59 @@ function makeBossTextures(scene){
     ctx.fillRect(-0.6,-2,1.2,4.5); ctx.beginPath(); ctx.arc(0,3.3,0.9,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
-  // Braços-garra mecânicos — metal escuro (gunmetal) com juntas vermelhas,
-  // a condizer com as engrenagens dos ombros. Compridos e com garra bem
-  // aberta, para lerem como "prestes a agarrar/atirar". "wave" levantados
-  // (a ameaçar), "rest" pousados ao longo do corpo.
+  // Braços mecânicos: tubo articulado (2 segmentos, anéis azuis nas
+  // juntas) + pinça de 3 dentes na ponta — redesenho (pedido: aproximar de
+  // uma ilustração de referência) do leque de garras triangulares anterior,
+  // que a esta escala lia como "asa de morcego" em vez de um braço.
+  // "wave" estendido para o lado (a agarrar), "rest" dobrado ao longo do
+  // corpo, sem tocar na fiada de rodas.
   function drawPoluidorArms(ctx, mood){
-    ctx.fillStyle="#3a3a42"; ctx.strokeStyle="#18181c"; ctx.lineWidth=2.5;
     if (mood === "wave") {
       [-1,1].forEach(side=>{
-        const sx=C+side*30, sy=C-4;
-        ctx.beginPath(); ctx.ellipse(sx+side*13, sy-19, 8,17, side*0.45,0,Math.PI*2); ctx.fill(); ctx.stroke();
-        // garra — três dedos bem abertos, mais compridos que antes
-        ctx.beginPath(); ctx.moveTo(sx+side*18, sy-34); ctx.lineTo(sx+side*30, sy-42); ctx.lineTo(sx+side*20, sy-28); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(sx+side*18, sy-26); ctx.lineTo(sx+side*31, sy-25); ctx.lineTo(sx+side*20, sy-18); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(sx+side*16, sy-19); ctx.lineTo(sx+side*27, sy-13); ctx.lineTo(sx+side*17, sy-10); ctx.closePath(); ctx.fill(); ctx.stroke();
-        // junta vermelha luminosa no ombro
-        ctx.fillStyle="#ff4030"; ctx.beginPath(); ctx.arc(sx+side*2, sy-8, 3.4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle="#3a3a42";
+        const sx=C+side*28, sy=C-2;
+        const mx=sx+side*14, my=sy-13;
+        const ex=sx+side*23, ey=sy-7;
+        ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(mx,my); ctx.stroke();
+        ctx.lineWidth=7.5;
+        ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(ex,ey); ctx.stroke();
+        [[sx,sy],[mx,my]].forEach(([jx,jy])=>{
+          ctx.fillStyle="#2c5aa0"; ctx.beginPath(); ctx.arc(jx,jy,6,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle="#1c3a6a"; ctx.lineWidth=1.4; ctx.stroke();
+        });
+        // pinça — 2 dedos a abrir em V + 1 polegar curto
+        ctx.save();
+        ctx.translate(ex,ey);
+        ctx.rotate(Math.atan2(ey-my, ex-mx));
+        ctx.fillStyle="#4a4a52"; ctx.strokeStyle="#18181c"; ctx.lineWidth=1.6;
+        [[-0.5,14],[0.55,15],[0.05,-9]].forEach(([da,len])=>{
+          ctx.save(); ctx.rotate(da);
+          ctx.beginPath();
+          ctx.moveTo(0,-3); ctx.lineTo(len*0.8,-1.5); ctx.lineTo(len,0); ctx.lineTo(len*0.8,1.5); ctx.lineTo(0,3);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.restore();
+        });
+        ctx.restore();
+        ctx.fillStyle="#ff4030";
+        ctx.beginPath(); ctx.arc(sx,sy,2.6,0,Math.PI*2); ctx.fill();
       });
     } else {
       [-1,1].forEach(side=>{
-        const sx=C+side*30, sy=C-4;
-        ctx.beginPath(); ctx.ellipse(sx+side*8, sy+18, 8,17, -side*0.28,0,Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx+side*13, sy+36, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle="#ff4030"; ctx.beginPath(); ctx.arc(sx+side*2, sy+2, 3.4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle="#3a3a42";
+        const sx=C+side*28, sy=C-2;
+        const mx=sx+side*17, my=sy+13;
+        const ex=sx+side*21, ey=sy+24;
+        ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(mx,my); ctx.stroke();
+        ctx.lineWidth=7.5;
+        ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(ex,ey); ctx.stroke();
+        [[sx,sy],[mx,my]].forEach(([jx,jy])=>{
+          ctx.fillStyle="#2c5aa0"; ctx.beginPath(); ctx.arc(jx,jy,6,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle="#1c3a6a"; ctx.lineWidth=1.4; ctx.stroke();
+        });
+        ctx.fillStyle="#4a4a52"; ctx.strokeStyle="#18181c"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.arc(ex,ey,6.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#ff4030";
+        ctx.beginPath(); ctx.arc(sx,sy,2.6,0,Math.PI*2); ctx.fill();
       });
     }
   }
@@ -1715,9 +1904,10 @@ function makeBossTextures(scene){
     ctx.fillStyle="#4a4a3a";
     [-14,14].forEach(dx=>{ ctx.beginPath(); ctx.arc(C+dx,VT-6,2,0,Math.PI*2); ctx.fill(); });
   }
-  // Duas fendas angulares (em vez de lentes redondas) — olhar afiado e
-  // hostil, como um triângulo de aviso vivo. Tamanho/cor variam por estado.
-  // "blink" fecha-as como um obturador mecânico.
+  // Fenda angulada e hostil (pedido: aproximar de uma ilustração de
+  // referência) — antes era um losango mais "gema/jóia"; agora é uma fenda
+  // esguia e assimétrica, como um visor de ódio. Tamanho/cor variam por
+  // estado. "blink" fecha-as como um obturador mecânico.
   function drawPoluidorEyes(ctx, mood){
     const pos=[[-10,-9],[10,-9]];
     if (mood==="blink"){
@@ -1739,10 +1929,10 @@ function makeBossTextures(scene){
       ctx.shadowColor=color; ctx.shadowBlur=7;
       ctx.fillStyle=color;
       ctx.beginPath();
-      ctx.moveTo(ex-side*7*s, ey);
-      ctx.lineTo(ex, ey-5*s);
-      ctx.lineTo(ex+side*7*s, ey+1.5*s);
-      ctx.lineTo(ex, ey+5*s);
+      ctx.moveTo(ex-side*9*s, ey+2*s);
+      ctx.lineTo(ex+side*2*s, ey-4*s);
+      ctx.lineTo(ex+side*9*s, ey-1*s);
+      ctx.lineTo(ex+side*2*s, ey+3.5*s);
       ctx.closePath(); ctx.fill();
       ctx.restore();
     });
