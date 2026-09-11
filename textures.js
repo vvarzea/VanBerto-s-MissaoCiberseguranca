@@ -507,7 +507,7 @@ function makeBossTextures(scene){
   // esfarrapada azul-marinho, uma garra grande de um lado e uma cana de
   // pesca com anzol do outro. Continua "stompBoss" (salta-lhe em cima 3
   // vezes) — só a pele muda, a mecânica é exactamente a mesma, e os 8
-  // estados (normal/armsdown/blink/ouch/laugh/angry/sad/sentado) mantêm-se
+  // estados (normal/armsdown/blink/ouch/laugh/angry/sad) mantêm-se
   // todos, só desenhados de novo com esta identidade.
   //
   // Paleta centralizada num só objeto (PH) para as 8 variantes usarem
@@ -756,7 +756,7 @@ function makeBossTextures(scene){
 
   // Cara — desenhada dentro da área do ecrã (drawPhishingScreen), sempre em
   // brilho ciano (glow). "mood" cobre os 6 humores usados pelas 6 texturas
-  // com cabeça normal (sentado tem a sua própria cara, à parte, porque a
+  // com cabeça normal (a pose "sentado" já removida tinha a sua própria cara, à parte, porque a
   // pose toda é diferente).
   function drawPhishingFace(ctx, mood) {
     const ex = 15, ey = 32;
@@ -885,8 +885,9 @@ function makeBossTextures(scene){
     drawPhishingFace(ctx, "angry");
     tex.refresh();
   }
-  // Estado "triste" — usado na derrota, antes de passar ao "sentado":
-  // olhos caídos + boca franzida para baixo.
+  // Estado "triste" — usado na derrota, antes de fugir a correr da arena
+  // (ver startBossStompDefeat em dia-crianca.js): olhos caídos + boca
+  // franzida para baixo.
   if (!scene.textures.exists("boss_monstro_phishing_sad")) {
     const tex = scene.textures.createCanvas("boss_monstro_phishing_sad", S, S), ctx = tex.getContext();
     drawPhishingBody(ctx);
@@ -894,81 +895,14 @@ function makeBossTextures(scene){
     drawPhishingFace(ctx, "sad");
     tex.refresh();
   }
-  // Estado "sentado" — sequência de derrota simpática: senta-se no chão, o
-  // chapéu cai-lhe ao lado (tombado), acena com a garra e mostra uma cara
-  // feliz no ecrã. Não morre, não explode — só fica simpático, tal como
-  // pedido na versão original deste boss.
-  if (!scene.textures.exists("boss_monstro_phishing_sentado")) {
-    const tex = scene.textures.createCanvas("boss_monstro_phishing_sentado", S, S), ctx = tex.getContext();
-    bossShadow(ctx);
-    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
-    ctx.fillStyle = PH.cloakMid;
-    ctx.beginPath(); ctx.ellipse(C - 17, C + 35, 18, 8, 0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(C + 17, C + 35, 18, 8, -0.25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = PH.hatDark;
-    [-28, 28].forEach(dx => {
-      ctx.beginPath(); ctx.ellipse(C + dx, C + 39, 9, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = PH.trim; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(C + dx - 7, C + 39); ctx.lineTo(C + dx + 7, C + 39); ctx.stroke();
-      ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
-    });
-
-    const gradSit = ctx.createLinearGradient(0, C - 10, 0, C + 28);
-    gradSit.addColorStop(0, PH.cloakLight);
-    gradSit.addColorStop(0.55, PH.cloakMid);
-    gradSit.addColorStop(1, PH.cloakDark);
-    ctx.fillStyle = gradSit;
-    ctx.beginPath(); ctx.ellipse(C, C + 10, 35, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.4; ctx.stroke();
-
-    ctx.fillStyle = PH.belt;
-    ctx.beginPath(); ctx.roundRect(C - 26, C + 4, 52, 8, 3); ctx.fill();
-    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.3; ctx.stroke();
-    ctx.fillStyle = PH.envelope;
-    ctx.beginPath(); ctx.roundRect(C - 10, C - 8, 20, 14, 2); ctx.fill();
-    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(C - 10, C - 8); ctx.lineTo(C, C); ctx.lineTo(C + 10, C - 8); ctx.stroke();
-
-    // braço relaxado (esquerdo)
-    ctx.fillStyle = PH.cloakMid; ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 2.2;
-    ctx.beginPath(); ctx.ellipse(C - 32, C + 14, 8, 14, 0.15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = PH.claw;
-    ctx.beginPath(); ctx.arc(C - 35, C + 26, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-    // braço a acenar (direito) — saudação amigável
-    ctx.fillStyle = PH.cloakMid;
-    ctx.beginPath(); ctx.ellipse(C + 31, C + 2, 8, 15, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = PH.claw;
-    ctx.beginPath(); ctx.ellipse(C + 39, C - 12, 7, 9, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    drawClawFinger(ctx, C + 41, C - 18, -Math.PI * 0.6, 13, 5.5);
-
-    drawPhishingScreen(ctx, 4);
-
-    // chapéu tombado ao lado, no chão — a piada visual de "derrota simpática"
-    ctx.save();
-    ctx.translate(C - 46, C + 40);
-    ctx.rotate(-0.5);
-    ctx.fillStyle = PH.hatDark;
-    ctx.beginPath(); ctx.ellipse(0, 0, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = PH.cloakDark; ctx.lineWidth = 1.6; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, -4, 10, 7, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.restore();
-
-    // cara feliz — olhos curvos + sorriso largo, a brilhar
-    ctx.save();
-    ctx.shadowColor = PH.glow; ctx.shadowBlur = 6;
-    ctx.strokeStyle = PH.glow; ctx.lineWidth = 2.6; ctx.lineCap = "round";
-    [-15, 15].forEach(dx => {
-      ctx.beginPath(); ctx.arc(C + dx, 36, 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
-    });
-    ctx.fillStyle = PH.glow;
-    ctx.beginPath();
-    ctx.moveTo(C - 12, 44); ctx.quadraticCurveTo(C, 52, C + 12, 44);
-    ctx.quadraticCurveTo(C, 49, C - 12, 44);
-    ctx.fill();
-    ctx.restore();
-    tex.refresh();
-  }
+  // REMOVIDO: estado "sentado" (boss_monstro_phishing_sentado) — textura
+  // órfã. Desenhava uma pose de derrota "simpática" (sentado, chapéu caído,
+  // a acenar) de uma versão antiga da sequência de derrota; a sequência
+  // atual (ver startBossStompDefeat em dia-crianca.js) usa antes a textura
+  // "_sad" seguida de fuga a correr, e nunca chegou a referenciar esta
+  // textura "_sentado". Só este boss a tinha (os outros 3 nunca tiveram
+  // equivalente) — código morto, removido para não confundir quem mexer
+  // aqui a seguir.
 
   // ── 2) Vírus Gigante — redesenho "robô-vírus" (pedido: aproximar a
   // aparência de uma imagem de referência fornecida pelo Berto, a mesma
@@ -1162,11 +1096,18 @@ function makeBossTextures(scene){
       ctx.beginPath(); ctx.roundRect(C + dx - 6, C + 26, 12, 14, 3); ctx.fill(); ctx.stroke();
       ctx.fillStyle = VG.bodyDark;
       ctx.beginPath(); ctx.roundRect(C + dx - 11, C + 36, 22, 13, 4); ctx.fill(); ctx.stroke();
-      ctx.save();
-      ctx.shadowColor = VG.glow; ctx.shadowBlur = 4;
-      ctx.strokeStyle = VG.glow; ctx.lineWidth = 1.8; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(C + dx - 5, C + 42.5); ctx.lineTo(C + dx + 5, C + 42.5); ctx.stroke();
-      ctx.restore();
+      // CORRIGIDO (pedido: bota "mais simples que as dos outros 3") — a
+      // risca de realce só cobria a metade interior da sola (dx-5..dx+5)
+      // e tinha um blur pesado, por isso lia-se mais como uma fresta a
+      // brilhar do que como o realce nítido de uma bota. Agora usa
+      // exactamente a mesma risca do Monstro do Phishing/Espião das
+      // Sombras: de ponta a ponta da sola (dx-11..dx+11), sem blur —
+      // âmbar (VG.glow2) em vez de vermelho, para não se confundir com o
+      // brilho da cara/garras e reforçar a mesma paleta dos pixels de
+      // "glitch" já usados nos cantos do ecrã (ver drawVirusScreen).
+      ctx.strokeStyle = VG.glow2; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(C + dx - 11, C + 40); ctx.lineTo(C + dx + 11, C + 40); ctx.stroke();
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
     });
   }
 
@@ -1473,11 +1414,12 @@ function makeBossTextures(scene){
       ctx.beginPath(); ctx.roundRect(C + dx - 6, C + 26, 12, 14, 3); ctx.fill(); ctx.stroke();
       ctx.fillStyle = SH.hatDark;
       ctx.beginPath(); ctx.roundRect(C + dx - 11, C + 36, 22, 13, 4); ctx.fill(); ctx.stroke();
-      ctx.save();
-      ctx.shadowColor = SH.glow; ctx.shadowBlur = 4;
-      ctx.strokeStyle = SH.glow; ctx.lineWidth = 1.8; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(C + dx - 5, C + 42.5); ctx.lineTo(C + dx + 5, C + 42.5); ctx.stroke();
-      ctx.restore();
+      // Mesmo acerto do Vírus Gigante (ver comentário lá): risca de ponta a
+      // ponta da sola, sem blur — SH.glow2 (lilás) em vez do magenta
+      // principal, tal como já se usa na orla da capa (drawShadowCloak).
+      ctx.strokeStyle = SH.glow2; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(C + dx - 11, C + 40); ctx.lineTo(C + dx + 11, C + 40); ctx.stroke();
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
     });
   }
 

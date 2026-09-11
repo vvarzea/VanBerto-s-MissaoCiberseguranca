@@ -24,6 +24,10 @@ export const BOSSES = [
     // já tem as suas próprias cores (prateado + brilho ciano), tal como o
     // envelope do Robô do Spam.
     orbTexture: "boss_proj_hook",
+    // Personalidade do arremesso (ver doBossRollQmark em dia-crianca.js):
+    // o anzol "lança-se" na horizontal como uma cana de pesca a fisgar, em
+    // vez de cair a direito como os outros 3 bosses.
+    hookDrift: true,
     // ===== Redesenho "Boss clássico à Mario" (nova) =====
     // Filosofia: arena do tamanho da janela (sem scroll), poucas plataformas,
     // e uma mecânica só — saltar-lhe em cima 3 vezes. Nada de fases, nada de
@@ -177,6 +181,11 @@ export const BOSSES = [
     qmarkEvery: 3400,
     forceFirstOrbRight: true, // pedido: o 1º ataque deste boss vai sempre para a direita — só a partir do 2º persegue mesmo o VanBerto's
     orbTexture: "boss_proj_germ", // micróbio com espigões — antes reutilizava a bola "?" do Monstro, sem sentido temático para um vírus
+    // Personalidade do arremesso (ver doBossRollQmark/spawnBossGermSplit em
+    // dia-crianca.js): ao primeiro toque no chão, o micróbio "replica-se"
+    // em 2 mais pequenos — só este boss faz isto, tal como só ele tem um
+    // tema biológico entre os 4.
+    splitOnBounce: true,
     // orbTint: era rosa (0xe0409a, a condizer com a esfera antiga) — agora
     // vermelho, a condizer com o redesenho "robô-vírus".
     orbTint: 0xff4030,
@@ -262,6 +271,12 @@ export const BOSSES = [
     qmarkEvery: 2000,
     orbTexture: "boss_proj_shadow", // orbe sombrio próprio — antes reutilizava a bola "?" do Monstro só retintada, sem sentido temático para um guardião das sombras
     orbTint: 0x6a3fb5,
+    // Personalidade do arremesso (ver doBossRollQmark em dia-crianca.js):
+    // a orbe parte mais devagar que os outros 3, mas vai-se "puxando"
+    // ligeiramente atrás do VanBerto's nos primeiros instantes de voo —
+    // não é perseguição perfeita, só o suficiente para parecer que o
+    // Espião está mesmo a mirar, condizente com o tema de vigilância.
+    homingDrift: true,
     // Momento "último fôlego" (nova, opt-in — só este boss): ao ficar a só 1
     // salto de ser derrotado (bossState.hp===1), lança 2 sombras vindas dos
     // extremos da arena, à altura da cabeça — só se evitam agachado (ver
@@ -344,6 +359,12 @@ export const BOSSES = [
     qmarkEvery: 2000,
     orbTexture: "boss_proj_spam", // envelope de spam com selo de aviso vermelho — o robô atira correio, não parafusos
     orbTint: 0xffffff,       // sem tint — o envelope já tem as suas próprias cores (branco/vermelho)
+    // Personalidade do arremesso (ver doBossRollQmark em dia-crianca.js):
+    // este boss atira sempre aos pares, não só na 2ª fúria como os outros
+    // 3 (doubleThrowAtMaxRage, mantido também aqui para o par ficar ainda
+    // mais rápido quando está a perder) — spam vem sempre em quantidade,
+    // é a sua assinatura.
+    alwaysDoubleThrow: true,
     // bossY: o Poluidor é uma caixa mecânica larga mas mais baixa que os
     // outros — medi o pixel mais baixo do corpo (~26px abaixo do centro do
     // canvas, bem menos que os outros porque não tem "cabeça" alta, só caixa

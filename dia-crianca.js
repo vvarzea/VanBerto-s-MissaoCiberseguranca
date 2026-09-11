@@ -5411,20 +5411,92 @@ window.addEventListener("DOMContentLoaded", () => {
     // do 2º, e qualquer boss sem forceFirstOrbRight) mantêm o
     // comportamento antigo, incluindo o ressalto normal nas plataformas.
     q.body.setCollideWorldBounds(!isForcedFirstShot);
-    q.setVelocity(towardPlayer * 90, -120);
+
+    // Personalidade do arremesso (pedido: os 4 bosses tinham exactamente o
+    // mesmo projétil físico — só a textura/tint mudavam). Cada boss "opt-in"
+    // a uma pequena variação de trajectória própria, tudo por cima da mesma
+    // base (gravidade 480, bounce 0.5) para continuar previsível/justo.
+    if (def.hookDrift) {
+      // Anzol do Monstro do Phishing: lançamento bem mais horizontal e
+      // rápido (como um lance de cana de pesca), que "assenta" a meio do
+      // ar — a velocidade horizontal cai de repente aos 380ms, como se o
+      // anzol tivesse ficado sem linha e começasse só a cair/arrastar.
+      q.setVelocity(towardPlayer * 170, -150);
+      scene.time.delayedCall(380, () => {
+        if (q.active && q.body) q.body.setVelocityX(towardPlayer * 45);
+      });
+    } else if (def.homingDrift) {
+      // Orbe do Espião das Sombras: parte mais devagar que os outros 3, mas
+      // vai sendo ligeiramente "puxada" na direção do VanBerto's nos
+      // primeiros ~600ms de voo (pequenos empurrões, sempre com um teto de
+      // velocidade) — não é perseguição perfeita, só o suficiente para
+      // parecer que o boss está mesmo a mirar, em vez de atirar às cegas.
+      q.setVelocity(towardPlayer * 55, -100);
+      const homingTimer = scene.time.addEvent({
+        delay: 150, repeat: 3,
+        callback: () => {
+          if (!q.active || !q.body) { try{homingTimer.remove(false);}catch{} return; }
+          const dir = (player.x < q.x) ? -1 : 1;
+          q.body.setVelocityX(Phaser.Math.Clamp(q.body.velocity.x + dir * 18, -110, 110));
+        }
+      });
+      bossTimers.push(homingTimer);
+    } else {
+      q.setVelocity(towardPlayer * 90, -120);
+    }
     q.setAngularVelocity(towardPlayer * 130);
-    scene.physics.add.collider(q, platforms);
+
+    if (def.splitOnBounce) {
+      // Micróbio do Vírus Gigante: ao primeiro toque numa plataforma,
+      // "parte" em 2 micróbios mais pequenos que se afastam um do outro —
+      // sensação de vírus a replicar-se, sem precisar de arte nova (reusa
+      // a mesma textura, só mais pequena). hasSplit evita que os próprios
+      // filhos (que não têm este collider especial) voltassem a partir-se.
+      let hasSplit = false;
+      scene.physics.add.collider(q, platforms, () => {
+        if (hasSplit || !q.active) return;
+        hasSplit = true;
+        spawnBossGermSplit(scene, q.x, q.y, def);
+        q.destroy();
+      });
+    } else {
+      scene.physics.add.collider(q, platforms);
+    }
     scene.time.delayedCall(4500, () => { if (q.active) q.destroy(); });
 
-    // Ataque duplo na fúria máxima (pedido "mais género Mario" — o boss
-    // fica mais intenso nos seus próprios ataques, sem precisar de nenhum
-    // perigo novo no chão): na 2ª fúria (desesperada), cada arremesso vem
-    // acompanhado de um 2º, um pouco atrás — como um boss clássico a
-    // atirar em sequência quando está mais fraco. isFollowUp evita uma
-    // cadeia infinita (o 2º disparo nunca gera um 3º).
-    if (!isFollowUp && def.doubleThrowAtMaxRage && bossState.rageLevel >= 2) {
+    // Ataque duplo (pedido "mais género Mario" — o boss fica mais intenso
+    // nos seus próprios ataques, sem precisar de nenhum perigo novo no
+    // chão): cada arremesso vem acompanhado de um 2º, um pouco atrás, como
+    // um boss clássico a atirar em sequência. Antes só acontecia na 2ª
+    // fúria (desesperada) de qualquer boss (doubleThrowAtMaxRage); o Robô
+    // do Spam agora fá-lo sempre (alwaysDoubleThrow, opt-in em
+    // data-bosses.js) — cartas de spam vêm sempre aos pares, é a sua
+    // assinatura, não só quando está a perder. isFollowUp evita uma cadeia
+    // infinita (o 2º disparo nunca gera um 3º, mesmo com as duas condições
+    // reunidas).
+    if (!isFollowUp && ((def.doubleThrowAtMaxRage && bossState.rageLevel >= 2) || def.alwaysDoubleThrow)) {
       scene.time.delayedCall(260, () => doBossRollQmark(scene, true));
     }
+  }
+
+  // Os 2 micróbios-filho de spawnBossGermSplit (ver splitOnBounce acima) —
+  // mais pequenos, mais rápidos a espalhar-se, com um tempo de vida mais
+  // curto que o micróbio original (não seria justo ficarem tanto tempo em
+  // jogo como o "pai").
+  function spawnBossGermSplit(scene, x, y, def) {
+    [-1, 1].forEach(dir => {
+      const child = itemsGroup.create(x, y - 4, def.orbTexture || "boss_proj_qmark");
+      if (def.orbTint != null) child.setTint(def.orbTint);
+      child.setScale(0.62).setDepth(2).setData("bossProjQmark", true);
+      child.body.setAllowGravity(true);
+      child.body.setGravityY(480);
+      child.body.setBounce(0.5, 0);
+      child.body.setCollideWorldBounds(true);
+      child.setVelocity(dir * 140, -180);
+      child.setAngularVelocity(dir * 200);
+      scene.physics.add.collider(child, platforms);
+      scene.time.delayedCall(2600, () => { if (child.active) child.destroy(); });
+    });
   }
 
   // ---- Baforada de fumo do Poluidor Mecânico (marca própria do boss — ver
