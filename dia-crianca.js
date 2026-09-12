@@ -2707,6 +2707,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const hazardNames = { lava: "🔥 Lava!", acid: "☠️ Ácido!", void: "🌑 Abismo!" };
     showFloat(scene, player.x, player.y - 60, hazardNames[h.kind] || "⚠️ Perigo!", "#ff4400");
+    // Aviso claro de perda de vida — mesmo motivo do onHitMalware (ver ali).
+    showFloat(scene, player.x, player.y - 90, "💥 -1 Vida!", "#ff5050");
 
     scene.time.delayedCall(420, () => {
       if (!player) return;
@@ -7248,6 +7250,10 @@ window.addEventListener("DOMContentLoaded", () => {
     if(heartsGfx&&sceneRef) sceneRef.tweens.add({targets:heartsGfx,x:{from:-4,to:4},duration:60,yoyo:true,repeat:3,ease:"Sine.easeInOut",onComplete:()=>{if(heartsGfx)heartsGfx.x=0;}});
     // Marca invuln imediatamente para bloquear hits durante o voo de knockback
     invuln=true;
+    // Aviso claro de perda de vida — antes só existia nos combates de boss
+    // (bossHitPlayer), por isso num toque normal de vilão a perda de vida
+    // passava despercebida (só o coração no HUD mudava, pequeno e discreto).
+    showFloat(sceneRef, playerObj.x, playerObj.y-90, "💥 -1 Vida!", "#ff5050");
     // Após o voo de knockback, teletransportar e iniciar 2s de proteção completa
     sceneRef.time.delayedCall(400, () => {
       if(!player) return;
