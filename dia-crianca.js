@@ -215,6 +215,25 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.tweens.add({ targets:t, y:y-44, alpha:0, duration:640, ease:"Sine.easeOut", onComplete:()=>t.destroy() });
   }
 
+  // "Hit-stop": congela a física e os tweens por instantes (efeito clássico
+  // de plataformas para dar peso a um golpe). Chamado logo a seguir a
+  // configurar o knockback/rotação de um toque — como a velocidade e os
+  // tweens já foram todos definidos antes de pausar, ficam visualmente
+  // "presos" na pose do impacto por ms milissegundos, e só depois
+  // continuam a animar normalmente. Sem isto, o toque, o tremor de câmara,
+  // o flash e o texto flutuante aconteciam todos ao mesmo tempo e depressa
+  // demais para uma criança perceber claramente que perdeu uma vida.
+  function applyHitStop(scene, ms = 80) {
+    if (!scene || !scene.physics || !scene.physics.world) return;
+    scene.physics.world.pause();
+    scene.tweens.pauseAll();
+    scene.time.delayedCall(ms, () => {
+      if (!scene || !scene.physics || !scene.physics.world) return;
+      scene.physics.world.resume();
+      scene.tweens.resumeAll();
+    });
+  }
+
   // ===== Quiz stats =====
   const quizStats = { total:0, correct:0, everWrong:false, errors:[], errorsByTheme:{} };
   const usedQuizByLevel = {};
@@ -2698,6 +2717,7 @@ window.addEventListener("DOMContentLoaded", () => {
       ease: "Sine.easeInOut",
       onComplete: () => { if (player) player.setAngle(0); }
     });
+    applyHitStop(scene);
 
     if (powered) { clearPower(scene); setInvuln(scene, 800); tipText.setText("🛡️ Escudo usado! Cuidado."); return; }
 
@@ -6153,6 +6173,7 @@ window.addEventListener("DOMContentLoaded", () => {
       ease: "Sine.easeInOut",
       onComplete: () => { if(player) player.setAngle(0); }
     });
+    applyHitStop(scene);
     lives -= 1; updateHearts(); livesLostThisLevel++; _hudDirty = true;
     triggerVanBertoSad(scene);
     if (heartsGfx) scene.tweens.add({targets:heartsGfx,x:{from:-4,to:4},duration:60,yoyo:true,repeat:3,ease:"Sine.easeInOut",onComplete:()=>{if(heartsGfx)heartsGfx.x=0;}});
@@ -7245,6 +7266,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // ─────────────────────────────────────────────────────────
 
     if(powered){clearPower(sceneRef);setInvuln(sceneRef,800);tipText.setText("🛡️ Escudo usado! Cuidado.");return;}
+    applyHitStop(sceneRef);
     lives-=1; updateHearts(); livesLostThisLevel++; _hudDirty=true;
     triggerVanBertoSad(sceneRef);
     if(heartsGfx&&sceneRef) sceneRef.tweens.add({targets:heartsGfx,x:{from:-4,to:4},duration:60,yoyo:true,repeat:3,ease:"Sine.easeInOut",onComplete:()=>{if(heartsGfx)heartsGfx.x=0;}});
