@@ -21,7 +21,7 @@ import { starsForLevel, totalStarsEarned, resetLevelStarTracking, finalizeLevelS
 import { unlockedAchievements, checkAchievements, onSecretFoundForAchievements,
          onHistoryReadForAchievements, onCorrectAnswerForAchievements, renderAchievements,
          resetAchievements, showAchievementToast, onSecretRoomFoundForAchievements } from "./achievements.js";
-import { BOSS_BY_LEVEL } from "./data-bosses.js";
+import { BOSSES, BOSS_BY_LEVEL } from "./data-bosses.js";
 import { REGION_INTRO, BOSS_OBJECTIVE, BOSS_INTRO_VB, BOSS_VICTORY_VB, NPC_SIGNS, BOSS_HP_TAUNTS } from "./data-story.js";
 import { playTitleCard, playCinematic } from "./cinematics.js";
 import { loadNamespace, saveNamespace } from "./storage.js";
@@ -716,6 +716,21 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   loadArtefacts();
 
+  // Álbum dos Direitos dos Bosses (novo — ver "Direito Recuperado" em
+  // startBossQuizPhase): { [bossId]: {flawless:bool} }, mesmo padrão de
+  // collectedArtefacts acima, só que a chave é o id do boss (data-bosses.js)
+  // em vez do índice no ARTEFACTS. Namespace próprio ("bossRights"), não
+  // misturado com "artefacts", para os 20 artefactos normais continuarem
+  // exactamente como estavam para quem já tenha progresso guardado.
+  let collectedBossRights = {};
+  function loadBossRights() {
+    collectedBossRights = loadNamespace("bossRights", {});
+  }
+  function saveBossRights() {
+    saveNamespace("bossRights", collectedBossRights);
+  }
+  loadBossRights();
+
   // =====================================================
   // ===== RESET COMPLETO DE PROGRESSO =====
   // Função única chamada por TODOS os pontos de "recomeçar" (menu inicial
@@ -733,6 +748,11 @@ window.addEventListener("DOMContentLoaded", () => {
     // Álbum dos Direitos
     collectedArtefacts = {};
     saveArtefacts();
+    // Álbum dos Direitos dos Bosses (novo, ver loadBossRights/saveBossRights
+    // acima) — sem isto, um "Apagar progresso" deixava crachás de bosses
+    // antigos por trás, incoerentes com o resto do progresso já limpo.
+    collectedBossRights = {};
+    saveBossRights();
     // Conquistas (achievements.js) — desbloqueios + contadores internos
     resetAchievements();
     // Estrelas por nível (stars.js)
@@ -1090,6 +1110,47 @@ window.addEventListener("DOMContentLoaded", () => {
     const got   = Object.keys(collectedArtefacts).filter(k => !k.includes("set_")).length;
     const pctEl = document.getElementById("agPct");
     if (pctEl) pctEl.textContent = `${got}/${total} competências recuperadas`;
+
+    // Crachás dos Bosses (novo, pedido: os "Direitos Recuperados" de cada
+    // boss apareciam num toast e desapareciam, sem nenhum sítio onde a
+    // criança os visse todos juntos no fim — um fecho narrativo mais forte
+    // do que só o ecrã de vitória genérico). Reaproveita a MESMA grelha e
+    // as mesmas classes CSS dos 20 artefactos normais (.ag-grid/.ag-cell —
+    // zero CSS novo), só com os 4 bosses em vez dos 20 níveis; construída
+    // uma única vez (guarda "agBossGrid") e só voltada a preencher em
+    // chamadas seguintes, tal como a grelha principal acima.
+    let bossHeading = document.getElementById("agBossHeading");
+    let bossGrid = document.getElementById("agBossGrid");
+    if (grid && grid.parentNode && (!bossHeading || !bossGrid)) {
+      bossHeading = document.createElement("p");
+      bossHeading.id = "agBossHeading";
+      bossHeading.className = "ag-pct";
+      bossHeading.style.marginTop = "10px";
+      bossHeading.textContent = "🏆 Direitos Recuperados dos Bosses";
+      grid.parentNode.insertBefore(bossHeading, grid.nextSibling);
+      bossGrid = document.createElement("div");
+      bossGrid.id = "agBossGrid";
+      bossGrid.className = "ag-grid";
+      grid.parentNode.insertBefore(bossGrid, bossHeading.nextSibling);
+    }
+    if (bossGrid) {
+      bossGrid.innerHTML = "";
+      [...BOSSES].sort((a, b) => a.afterLevel - b.afterLevel).forEach((b, i) => {
+        const info = collectedBossRights[b.id];
+        const gotIt = !!info;
+        const cell = document.createElement("div");
+        cell.className = "ag-cell" + (gotIt ? " ag-cell--got" : " ag-cell--miss");
+        cell.style.animationDelay = (i * 60) + "ms";
+        const rr = b.rightRecovered;
+        const name = gotIt && rr ? rr.name + (info.flawless ? " ⭐" : "") : "?";
+        cell.innerHTML = `
+          <div class="ag-emoji">${gotIt && rr ? rr.emoji : "🔒"}</div>
+          <div class="ag-name">${name}</div>
+        `;
+        if (gotIt && info.flawless) cell.title = "Combate Perfeito — nenhuma vida perdida!";
+        bossGrid.appendChild(cell);
+      });
+    }
 
     overlay.classList.remove("hidden");
     overlay.classList.add("show");
@@ -4455,7 +4516,11 @@ window.addEventListener("DOMContentLoaded", () => {
     destroyBossHpBar();
     // Começa em "intro": todos os timers/movimentos do boss (que verificam
     // phase!=="platform") ficam inertes enquanto decorre a cinemática de entrada.
-    bossState = { def, hp: def.hp, phase: "intro", collected: 0, onComplete, hitCooldownUntil: 0, rageLevel: 0, speedMult: 1, qmarkShotCount: 0 };
+    bossState = { def, hp: def.hp, phase: "intro", collected: 0, onComplete, hitCooldownUntil: 0, rageLevel: 0, speedMult: 1, qmarkShotCount: 0,
+      // tookDamage (novo): fica true na 1ª vez que bossHitPlayer() acertar
+      // durante este combate — usado só no fim (ver "Combate Perfeito" na
+      // vitória do quiz) para saber se o jogador não perdeu nenhuma vida.
+      tookDamage: false };
 
     // Limpar o palco tal como loadLevel já faz — arena dedicada, isolada do nível anterior
     enemyTimers.forEach(t=>{try{t.remove(false);}catch{}}); enemyTimers=[];
@@ -5006,16 +5071,18 @@ window.addEventListener("DOMContentLoaded", () => {
       shadow.setAngularVelocity(fromLeft ? -180 : 180);
       scene.time.delayedCall(3000, () => { if (shadow.active) shadow.destroy(); });
     };
-    // 2 sombras em sequência (não simultâneas) — dá tempo de perceber o
-    // padrão e agachar a tempo, mesmo sendo a 1ª vez que a criança vê este
-    // ataque em particular. Uma 3ª sombra (nova) fecha a sequência com um
-    // padrão alternado (esquerda-direita-esquerda) em vez de só 2 — o
-    // último fôlego de qualquer boss é o momento pensado para ser o mais
-    // difícil do combate, por isso ganha aqui, não nos ataques normais já
-    // muito afinados ao longo de várias rondas de feedback.
-    scene.time.delayedCall(500, () => spawnShadow(true));
-    scene.time.delayedCall(1300, () => spawnShadow(false));
-    scene.time.delayedCall(2100, () => spawnShadow(true));
+    // Sequência alternada (esquerda-direita-esquerda-...), espaçada 800ms —
+    // dá tempo de perceber o padrão e agachar a tempo, mesmo sendo a 1ª vez
+    // que a criança vê este ataque em particular. Número de sombras via
+    // def.finalStandBurstHits (opt-in, omisso = 3): o último fôlego de
+    // qualquer boss é pensado para ser o momento mais difícil do combate,
+    // por isso o motor por omissão sobe para 3 (era só 2) — mas o Vírus
+    // Gigante, por continuar a ser o 1º boss do jogo, pede explicitamente
+    // para ficar nos 2 originais (ver finalStandBurstHits em data-bosses.js).
+    const hits = def.finalStandBurstHits || 3;
+    for (let i = 0; i < hits; i++) {
+      scene.time.delayedCall(500 + i * 800, () => spawnShadow(i % 2 === 0));
+    }
   }
 
   function spawnBossSprite(scene, def, x) {
@@ -6175,6 +6242,12 @@ window.addEventListener("DOMContentLoaded", () => {
   function bossHitPlayer(scene, sourceObj, warnMsg) {
     if (invuln || lives <= 0) return;
     ensureAudio(); SFX.hit();
+    // Combate Perfeito (novo, ver "flawless" na vitória em startBossQuizPhase):
+    // marca que este combate já não é "sem perder uma vida", assim que o
+    // boss acerta pela 1ª vez. Só dentro de um combate ativo — bossHitPlayer
+    // também é chamada por outras fontes de dano fora daí (ver comentário
+    // logo abaixo sobre a risada trocista).
+    if (inBossFight && bossState) bossState.tookDamage = true;
     // Risada trocista (pedido: "mais expressões... rir") — sempre que o
     // boss consegue acertar no VanBerto's durante o combate, mostra por
     // instantes a mesma cara de riso maléfico da entrada (textura
@@ -6478,6 +6551,10 @@ window.addEventListener("DOMContentLoaded", () => {
     showQuiz(quiz, () => {
       const def = bossState.def;
       const finished = bossState.onComplete;
+      // Combate Perfeito (novo): capturado ANTES de bossState ser posto a
+      // null mais abaixo — usado depois de "Direito Recuperado" para saber
+      // se este combate específico decorreu sem perder nenhuma vida.
+      const flawless = !bossState.tookDamage;
       ensureAudio(); SFX.win();
       player.setAlpha(1);
       // Pequena "pose de vitória" — dois saltinhos rápidos do VanBerto's, para
@@ -6540,6 +6617,23 @@ window.addEventListener("DOMContentLoaded", () => {
       // conquistas (achv-toast) que já existe e já é usado neste jogo.
       if (def.rightRecovered) {
         showAchievementToast({ tier: def.rightRecovered.emoji, name: def.rightRecovered.name }, "🎉 Direito Recuperado!");
+        // Álbum dos Direitos dos Bosses (novo, pedido: os 4 "Direitos
+        // Recuperados" apareciam e desapareciam num toast, sem nenhum sítio
+        // onde a criança os visse todos juntos no fim). Regista este boss
+        // como vencido — mostrado na Galeria de Competências, a seguir aos
+        // 20 artefactos normais (ver showArtefactGallery).
+        collectedBossRights[def.id] = { flawless };
+        saveBossRights();
+      }
+      // Combate Perfeito (novo, pedido: "não há recompensa nenhuma por jogar
+      // bem um boss") — um 2º toast, um pouco depois do primeiro para não
+      // amontoar tudo no mesmo instante (banner+confetti+acorde+toast já
+      // acontecem todos ali). Só visual (reaproveita o mesmo achv-toast já
+      // usado no jogo) — não mexe no sistema de conquistas nem no HUD.
+      if (flawless) {
+        sceneRef.time.delayedCall(1200, () => {
+          showAchievementToast({ tier: "🏆", name: "Nenhuma vida perdida neste combate!" }, "✨ Combate Perfeito!");
+        });
       }
       // awaitingQuiz continua true durante a cinemática de vitória — só liberta
       // o jogador quando o portal for criado, a seguir ao diálogo.

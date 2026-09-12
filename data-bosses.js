@@ -178,6 +178,11 @@ export const BOSSES = [
     // "Último fôlego" (nova) — ver comentário completo no Monstro do
     // Phishing; aqui usa o micróbio (boss_proj_germ) próprio deste boss.
     finalStandBurst: true,
+    // Decidido depois de discutir a dificuldade dos 4 bosses: o motor por
+    // omissão manda 3 projéteis no último fôlego (ver startBossFinalStandBurst
+    // em dia-crianca.js), mas este continua a ser o 1º boss do jogo — fica
+    // nos 2 originais, mais gentil, enquanto os outros 3 sobem para 3.
+    finalStandBurstHits: 2,
     // Falas próprias de fúria (nova) — ver comentário completo no Monstro
     // do Phishing.
     rageLines: { angry: "Vou replicar-me outra vez!", desperate: "O antivírus... está a vencer!" },
