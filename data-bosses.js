@@ -44,6 +44,21 @@ export const BOSSES = [
     entranceGrow: true,
     epicDefeat: true,
     doubleThrowAtMaxRage: true,
+    // "Último fôlego" (nova — antes só o Espião das Sombras tinha isto):
+    // startBossFinalStandBurst() já era 100% genérica (usa def.name,
+    // def.orbTexture/orbTint, arena.worldW), por isso ativar aqui só pede
+    // ao motor para disparar o mesmo momento de clímax ao chegar a 1 salto
+    // por dar — com o anzol (boss_proj_hook) próprio deste boss, não com o
+    // orbe sombrio do Espião. Sem isto, só o último boss do jogo tinha um
+    // momento culminante — os outros 3 terminavam sem nenhum.
+    finalStandBurst: true,
+    // Falas próprias na transição de fúria (ver bossEnterRage em
+    // dia-crianca.js) — antes caíam sempre no genérico ("Ainda não
+    // acabou!"/"Não... não pode ser!") por não existir def.rageLines em
+    // nenhum dos 4 bosses. Distintas das taunts curtas de BOSS_HP_TAUNTS
+    // (data-story.js) — aquelas disparam a cada salto certeiro; estas só
+    // nos 2 momentos de escalada de fúria (mais impacto: câmara+flash).
+    rageLines: { angry: "Achavas que era só um clique?!", desperate: "Não... a isca não pegou!" },
     movementType: "patrol",  // anda devagar de um lado para o outro — nunca teletransporta, nunca desaparece
     patrolSpeed: 55,
     hopEvery: 2400,          // de vez em quando dá um pequeno salto (só visual)
@@ -106,10 +121,15 @@ export const BOSSES = [
       // exactamente como acontece nos níveis normais, por isso não precisa
       // de um valor próprio.
       worldH: 514,
+      // Variedade de silhueta (nova — antes as 4 arenas tinham quase a
+      // mesma forma: chão + 2 plataformas simétricas à mesma altura). Só
+      // o Y da plataforma direita mudou (391, 30px mais alta que a
+      // esquerda) — o X mantém-se exactamente igual, por isso signX (mais
+      // abaixo) continua válido sem recálculo.
       platforms: [
         [480,521,960,30],   // chão principal, de ponta a ponta — topo em y=506, igual aos níveis normais
         [230,421,150,20],   // plataforma baixa esquerda (deslocada 21px para baixo, junto com o chão)
-        [730,421,150,20]    // plataforma baixa direita (idem)
+        [730,391,150,20]    // plataforma direita — 30px mais alta que a esquerda (nova, dá um salto extra)
       ],
       // Pedido: o VanBerto's começava sempre bem junto à margem esquerda
       // (120px, o valor por omissão). 400px fica bem mais ao centro da arena
@@ -146,6 +166,35 @@ export const BOSSES = [
     entranceGrow: true,
     epicDefeat: true,
     doubleThrowAtMaxRage: true,
+    // "Último fôlego" (nova) — ver comentário completo no Monstro do
+    // Phishing; aqui usa o micróbio (boss_proj_germ) próprio deste boss.
+    finalStandBurst: true,
+    // Falas próprias de fúria (nova) — ver comentário completo no Monstro
+    // do Phishing.
+    rageLines: { angry: "Vou replicar-me outra vez!", desperate: "O antivírus... está a vencer!" },
+    // Arena contaminada reativada (nova) — este boss já teve isto antes da
+    // conversão para "boss clássico à Mario" (2 zonas fixas + vírus a
+    // flutuar), mas ficou por trazer de volta no redesenho. Só a zona
+    // tóxica no chão (sem vírus a flutuar — virusBase:0, ver
+    // spawnMiniViruses em dia-crianca.js, que ainda tinha coordenadas da
+    // arena antiga de 1600px de largura e por isso ficava fora do ecrã na
+    // arena atual de 960px; corrigido à parte, mas mantido desligado aqui
+    // por agora, só a zona de chão). Zonas colocadas exactamente por baixo
+    // de cada plataforma baixa (mesmo X/W dela) — o chão nessa faixa fica
+    // tóxico, o que transforma as 2 plataformas num "precisas de saltar
+    // para lá" em vez de um extra opcional. O corredor central (entre
+    // ~x=270 e ~x=690, onde fica o spawn do jogador em x=400) continua
+    // sempre livre. escalations alarga as zonas a cada fúria (bossEnterRage
+    // já lê isto — ver currentContaminationZones em dia-crianca.js).
+    contaminatedArena: {
+      hazardType: "acid",
+      zonesBase: [ {x:200,w:140}, {x:760,w:140} ],
+      virusBase: 0,
+      escalations: {
+        1: { zones: [ {x:200,w:180}, {x:760,w:180} ] },
+        2: { zones: [ {x:200,w:220}, {x:760,w:220} ] }
+      }
+    },
     movementType: "wave",    // continua a flutuar em onda, pulsando de tamanho — só a forma de o vencer mudou
     // REBALANCEADO OUTRA VEZ (pedido: "o boss da saúde tem de ser mais fácil
     // porque é o primeiro") — ao passar a ser o 1º boss do jogo (antes era o
@@ -222,10 +271,12 @@ export const BOSSES = [
     arena: {
       worldW: 960,
       worldH: 514,
+      // Variedade de silhueta (nova, ver mesmo comentário no Monstro do
+      // Phishing) — plataforma direita 30px mais alta; X inalterado.
       platforms: [
         [480,521,960,30],   // chão principal, de ponta a ponta — topo em y=506
         [200,421,140,20],   // plataforma baixa esquerda
-        [760,421,140,20]    // plataforma baixa direita
+        [760,391,140,20]    // plataforma direita — 30px mais alta que a esquerda
       ],
       // Mesma lógica do Monstro do Phishing: o VanBerto's deve começar
       // sempre no mesmo sítio em todos os bosses, em vez do 120 por omissão
@@ -285,6 +336,9 @@ export const BOSSES = [
     // startBossFinalStandBurst em dia-crianca.js). Um pequeno clímax visual
     // para o combate final, sem tocar no hp nem na dificuldade geral.
     finalStandBurst: true,
+    // Falas próprias de fúria (nova) — ver comentário completo no Monstro
+    // do Phishing (data-bosses.js, boss monstro_phishing).
+    rageLines: { angry: "As sombras ficam mais fundas!", desperate: "A tua privacidade... está a vencer-me!" },
     // bossY: recalculado com o redesenho "feiticeiro-espião" (ver
     // makeBossTextures em textures.js) — a capa/robe antiga não tinha
     // pernas (bainha a ~43px abaixo do centro); agora tem botas, tal como
@@ -316,10 +370,13 @@ export const BOSSES = [
     arena: {
       worldW: 960,
       worldH: 514,
+      // Variedade de silhueta (nova, ver mesmo comentário no Monstro do
+      // Phishing) — plataforma direita 30px mais alta; X inalterado, por
+      // isso spawnSpots (mais abaixo) continua válido sem recálculo.
       platforms: [
         [480,521,960,30],   // chão principal, de ponta a ponta — topo em y=506
         [220,421,120,20],   // plataforma baixa esquerda
-        [740,421,120,20]    // plataforma baixa direita
+        [740,391,120,20]    // plataforma direita — 30px mais alta que a esquerda
       ],
       // Mesma lógica do Monstro do Phishing: o VanBerto's deve começar
       // sempre no mesmo sítio em todos os bosses, em vez do 120 por omissão
@@ -355,6 +412,26 @@ export const BOSSES = [
     entranceGrow: true,
     epicDefeat: true,
     doubleThrowAtMaxRage: true,
+    // "Último fôlego" (nova) — ver comentário completo no Monstro do
+    // Phishing; aqui usa o envelope de spam (boss_proj_spam) próprio.
+    finalStandBurst: true,
+    // Falas próprias de fúria (nova) — ver comentário completo no Monstro
+    // do Phishing.
+    rageLines: { angry: "Mais mensagens! Mais spam!", desperate: "Os meus circuitos... sobrecarregados!" },
+    // Arena contaminada reativada (nova) — mesma lógica do Vírus Gigante
+    // (ver esse comentário completo), hazardType "lava" em vez de "acid"
+    // para condizer com a estética mecânica/industrial deste boss (chaminé
+    // + caixa metálica, ver drawPoluidorBody em textures.js) em vez do
+    // verde tóxico do vírus.
+    contaminatedArena: {
+      hazardType: "lava",
+      zonesBase: [ {x:200,w:150}, {x:760,w:150} ],
+      virusBase: 0,
+      escalations: {
+        1: { zones: [ {x:200,w:190}, {x:760,w:190} ] },
+        2: { zones: [ {x:200,w:230}, {x:760,w:230} ] }
+      }
+    },
     movementType: "patrol",
     patrolSpeed: 150,        // mais rápido — sensação industrial
     hopEvery: 2000,
@@ -396,10 +473,18 @@ export const BOSSES = [
     arena: {
       worldW: 960,
       worldH: 514,
+      // Variedade de silhueta (nova): as duas plataformas baixas mantêm-se
+      // iguais (signX depende do X da esquerda, ver acima), mas há agora
+      // uma 3ª plataforma central mais alta — um "degrau" a meio da arena,
+      // condizente com a sensação industrial/fabril deste boss (uma
+      // esteira/andaime suspenso). x=480 fica centrado, longe de ambas as
+      // plataformas baixas, e nunca colide com a patrulha do boss (que anda
+      // à altura bossY=467, bem abaixo desta plataforma).
       platforms: [
         [480,521,960,30],   // chão principal, de ponta a ponta — topo em y=506
         [200,421,150,20],   // plataforma baixa esquerda
-        [760,421,150,20]    // plataforma baixa direita
+        [760,421,150,20],   // plataforma baixa direita
+        [480,381,120,20]    // plataforma central, mais alta (nova)
       ],
       // Mesma lógica do Monstro do Phishing: o VanBerto's deve começar
       // sempre no mesmo sítio em todos os bosses, em vez do 120 por omissão

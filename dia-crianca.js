@@ -5271,8 +5271,14 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
   function spawnMiniViruses(scene, count) {
+    // CORRIGIDO — x ia de 350 a 1250, herdado da arena antiga (1600px de
+    // largura, antes da conversão para "boss clássico à Mario"); nas
+    // arenas atuais (960px) isso mandava vírus para fora do ecrã, à direita
+    // da câmara. Agora usa a largura real da arena do boss em combate, com
+    // uma margem de 60px de cada lado.
+    const worldW = (bossState && bossState.def.arena && bossState.def.arena.worldW) || 960;
     for (let i=0;i<count;i++){
-      const x = 350 + Math.random()*900;
+      const x = 60 + Math.random()*(worldW-120);
       const v = malwareGroup.create(x, 320 + Math.random()*100, "vilao_round");
       v.setScale(0.7).setTint(0x30c060).setData("isMiniHazard", true);
       v.body.setAllowGravity(false);
