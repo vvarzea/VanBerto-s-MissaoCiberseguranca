@@ -4838,7 +4838,10 @@ window.addEventListener("DOMContentLoaded", () => {
       spawnBossSign(scene, signX, def.signY != null ? def.signY : 486, objEmoji, objective);
       if (def.stompBoss) {
         // Sem estrela, sem carga — o HUD mostra logo o progresso dos saltos.
-        itemCountText.setText(`👣 Saltos: 0/${def.hp}`);
+        // stompLabel (nova, opt-in): rótulo temático por boss em vez do
+        // genérico "👣 Saltos" para todos — dá mais identidade a cada
+        // combate (ver data-bosses.js).
+        itemCountText.setText(`${def.stompLabel || "👣 Saltos"}: 0/${def.hp}`);
       } else if (!def.specialAttack) {
         // Lembrete visual permanente por cima do boss — 🔒 enquanto não podes
         // tocar-lhe, ⭐ assim que apanhas o poder da estrela. Substitui/completa
@@ -4970,15 +4973,15 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.time.delayedCall(2600, () => { if (news.active) news.destroy(); });
   }
 
-  // ---- Momento "último fôlego" (opt-in via def.finalStandBurst, ver
-  // data-bosses.js — só o Guardião das Sombras, por agora): disparado uma
-  // única vez a partir de damageBoss() quando o boss fica a só 1 salto de
-  // ser derrotado. Lança 2 sombras vindas dos extremos da arena, a voar na
-  // horizontal (sem gravidade, tal como o antigo "Fake News", mas com as
-  // dimensões da arena ATUAL — 960px, não os 1600px de antes da conversão
-  // para "boss clássico à Mario"). altura da cabeça: o chão da arena tem o
-  // topo em y=506 e o VanBerto's de pé mede ~72px (pés sempre no mesmo
-  // sítio) → cabeça de pé por volta de y=434; agachado (~60% da altura, ver
+  // ---- Momento "último fôlego" (opt-in via def.finalStandBurst — agora
+  // nos 4 bosses, ver data-bosses.js): disparado uma única vez a partir de
+  // damageBoss() quando o boss fica a só 1 salto de ser derrotado. Lança 3
+  // sombras vindas dos extremos da arena, a voar na horizontal (sem
+  // gravidade, tal como o antigo "Fake News", mas com as dimensões da
+  // arena ATUAL — 960px, não os 1600px de antes da conversão para "boss
+  // clássico à Mario"). altura da cabeça: o chão da arena tem o topo em
+  // y=506 e o VanBerto's de pé mede ~72px (pés sempre no mesmo sítio) →
+  // cabeça de pé por volta de y=434; agachado (~60% da altura, ver
   // isCrouching) → cabeça por volta de y=463. y=452 fica a meio dos dois:
   // acerta em pé, passa por cima agachado. Não altera hp nem timers normais
   // do boss (patrulha/teleporte/❓ continuam) — é só uma camada extra.
@@ -5005,9 +5008,14 @@ window.addEventListener("DOMContentLoaded", () => {
     };
     // 2 sombras em sequência (não simultâneas) — dá tempo de perceber o
     // padrão e agachar a tempo, mesmo sendo a 1ª vez que a criança vê este
-    // ataque em particular.
+    // ataque em particular. Uma 3ª sombra (nova) fecha a sequência com um
+    // padrão alternado (esquerda-direita-esquerda) em vez de só 2 — o
+    // último fôlego de qualquer boss é o momento pensado para ser o mais
+    // difícil do combate, por isso ganha aqui, não nos ataques normais já
+    // muito afinados ao longo de várias rondas de feedback.
     scene.time.delayedCall(500, () => spawnShadow(true));
     scene.time.delayedCall(1300, () => spawnShadow(false));
+    scene.time.delayedCall(2100, () => spawnShadow(true));
   }
 
   function spawnBossSprite(scene, def, x) {
@@ -5501,8 +5509,11 @@ window.addEventListener("DOMContentLoaded", () => {
     // data-bosses.js) — cartas de spam vêm sempre aos pares, é a sua
     // assinatura, não só quando está a perder. isFollowUp evita uma cadeia
     // infinita (o 2º disparo nunca gera um 3º, mesmo com as duas condições
-    // reunidas).
-    if (!isFollowUp && ((def.doubleThrowAtMaxRage && bossState.rageLevel >= 2) || def.alwaysDoubleThrow)) {
+    // reunidas). doubleThrowFromRage1 (nova, só Monstro do Phishing): este
+    // boss passa a atirar em par já na 1ª fúria (rageLevel>=1), uma fúria
+    // mais cedo que os outros 3 (que só duplicam na 2ª/desesperada) — dá-lhe
+    // uma escalada própria em vez de só ficar mais rápido como antes.
+    if (!isFollowUp && ((def.doubleThrowAtMaxRage && bossState.rageLevel >= 2) || def.alwaysDoubleThrow || (def.doubleThrowFromRage1 && bossState.rageLevel >= 1))) {
       scene.time.delayedCall(260, () => doBossRollQmark(scene, true));
     }
   }
@@ -5894,17 +5905,32 @@ window.addEventListener("DOMContentLoaded", () => {
     if (bossState.qmarkTimer) bossState.qmarkTimer.delay = bossState.qmarkBaseDelay / bossState.speedMult;
     if (bossState.smokeTimer) bossState.smokeTimer.delay = bossState.smokeBaseDelay / bossState.speedMult;
 
-    // Escalada da arena contaminada/poluída (Vírus Gigante, Poluidor Mecânico) —
-    // 100% opt-in via def.contaminatedArena.escalations[level]; bosses sem esse
-    // campo (Monstro, Guardião) ficam exatamente iguais a antes. Cada boss
-    // decide em que nível de fúria quer escalar (Vírus na 1ª fúria, Poluidor
-    // só na fúria final) — não é um valor fixo do motor.
+    // Escalada da arena contaminada/poluída (Vírus Gigante, Robô do Spam) —
+    // 100% opt-in via def.contaminatedArena.escalations[level]; bosses sem
+    // esse campo (Monstro, Guardião) ficam exatamente iguais a antes. Os 2
+    // bosses que a usam escalam nas 2 fúrias (zonas cada vez mais largas).
     if (def.contaminatedArena && typeof def.contaminatedArena === "object") {
       const esc = def.contaminatedArena.escalations && def.contaminatedArena.escalations[level];
       if (esc) {
         if (esc.zones) spawnToxicZones(scene, esc.zones, def.contaminatedArena.hazardType);
         if (esc.virus != null) bossState.desiredVirusCount = esc.virus;
+        // Reação visual ao chão a piorar (nova) — sem isto, o alargamento das
+        // zonas era silencioso, fácil de não notar a meio da ação. Um flash
+        // rápido na cor do próprio perigo (verde ácido / laranja lava) chama
+        // a atenção exactamente no instante em que o chão fica mais perigoso.
+        const flashRGB = def.contaminatedArena.hazardType === "lava" ? [255,120,20] : [40,220,80];
+        scene.cameras.main.flash(260, flashRGB[0], flashRGB[1], flashRGB[2]);
       }
+    }
+
+    // Teletransporte-surpresa (nova, só Espião das Sombras — def.extraTeleportOnRage):
+    // ao entrar em fúria (1ª ou 2ª), o Espião desaparece e reaparece de
+    // imediato, além dos seus teletransportes normais por temporizador —
+    // reforça a identidade de "difícil de apanhar quando está a perder",
+    // dando-lhe uma escalada própria tal como o chão contaminado dá ao
+    // Vírus/Robô e o ataque duplo mais cedo dá ao Monstro do Phishing.
+    if (def.extraTeleportOnRage && (def.movementType === "teleport" || def.movementType === "blink")) {
+      doBossTeleport(scene);
     }
 
     // Cara fica vermelha de raiva (pedido) — nova variante de textura
@@ -6008,7 +6034,7 @@ window.addEventListener("DOMContentLoaded", () => {
       // 3º (e último) salto. Só sobe até ao 2º salto — no 3º o boss já foi
       // derrotado, não há "fúria" nenhuma para mostrar.
       const stomps = hitsTaken;
-      itemCountText.setText(`👣 Saltos: ${Math.max(0,stomps)}/${bossState.def.hp}`);
+      itemCountText.setText(`${bossState.def.stompLabel || "👣 Saltos"}: ${Math.max(0,stomps)}/${bossState.def.hp}`);
       const taunts = BOSS_HP_TAUNTS[bossState.def.id];
       if (taunts && bossState.hp > 0) {
         const key = bossState.hp === 2 ? "hp2" : bossState.hp === 1 ? "hp1" : "atStart";

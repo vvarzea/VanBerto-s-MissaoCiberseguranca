@@ -59,6 +59,15 @@ export const BOSSES = [
     // (data-story.js) — aquelas disparam a cada salto certeiro; estas só
     // nos 2 momentos de escalada de fúria (mais impacto: câmara+flash).
     rageLines: { angry: "Achavas que era só um clique?!", desperate: "Não... a isca não pegou!" },
+    // Escalada própria na 1ª fúria (nova) — este boss passa a atirar em par
+    // (ver doBossRollQmark em dia-crianca.js) já ao primeiro salto certeiro,
+    // uma fúria mais cedo que os outros 3 "doubleThrowAtMaxRage" (só na 2ª).
+    // Dá-lhe uma identidade de escalada própria, tal como o chão contaminado
+    // dá ao Vírus/Robô e o teletransporte-surpresa dá ao Espião.
+    doubleThrowFromRage1: true,
+    // Rótulo temático do contador de saltos no HUD (nova) — antes os 4
+    // bosses mostravam sempre "👣 Saltos: X/3", sem ligação ao tema.
+    stompLabel: "🎣 Mordidas",
     movementType: "patrol",  // anda devagar de um lado para o outro — nunca teletransporta, nunca desaparece
     patrolSpeed: 55,
     hopEvery: 2400,          // de vez em quando dá um pequeno salto (só visual)
@@ -172,6 +181,9 @@ export const BOSSES = [
     // Falas próprias de fúria (nova) — ver comentário completo no Monstro
     // do Phishing.
     rageLines: { angry: "Vou replicar-me outra vez!", desperate: "O antivírus... está a vencer!" },
+    // Rótulo temático do contador de saltos no HUD (nova, ver mesmo
+    // comentário no Monstro do Phishing).
+    stompLabel: "🦠 Infeções travadas",
     // Arena contaminada reativada (nova) — este boss já teve isto antes da
     // conversão para "boss clássico à Mario" (2 zonas fixas + vírus a
     // flutuar), mas ficou por trazer de volta no redesenho. Só a zona
@@ -339,6 +351,16 @@ export const BOSSES = [
     // Falas próprias de fúria (nova) — ver comentário completo no Monstro
     // do Phishing (data-bosses.js, boss monstro_phishing).
     rageLines: { angry: "As sombras ficam mais fundas!", desperate: "A tua privacidade... está a vencer-me!" },
+    // Teletransporte-surpresa na fúria (nova, ver bossEnterRage em
+    // dia-crianca.js) — este boss já teletransporta sozinho por temporizador
+    // (teleportDelay); isto acrescenta UM extra exactamente ao entrar em
+    // cada fúria, tornando-o ainda mais difícil de apanhar mesmo quando já
+    // está a perder, tal como o Vírus/Robô ganham chão contaminado e o
+    // Monstro do Phishing ganha o ataque duplo mais cedo.
+    extraTeleportOnRage: true,
+    // Rótulo temático do contador de saltos no HUD (nova, ver mesmo
+    // comentário no Monstro do Phishing).
+    stompLabel: "👁️ Exposições",
     // bossY: recalculado com o redesenho "feiticeiro-espião" (ver
     // makeBossTextures em textures.js) — a capa/robe antiga não tinha
     // pernas (bainha a ~43px abaixo do centro); agora tem botas, tal como
@@ -418,6 +440,9 @@ export const BOSSES = [
     // Falas próprias de fúria (nova) — ver comentário completo no Monstro
     // do Phishing.
     rageLines: { angry: "Mais mensagens! Mais spam!", desperate: "Os meus circuitos... sobrecarregados!" },
+    // Rótulo temático do contador de saltos no HUD (nova, ver mesmo
+    // comentário no Monstro do Phishing).
+    stompLabel: "📛 Bloqueios",
     // Arena contaminada reativada (nova) — mesma lógica do Vírus Gigante
     // (ver esse comentário completo), hazardType "lava" em vez de "acid"
     // para condizer com a estética mecânica/industrial deste boss (chaminé
