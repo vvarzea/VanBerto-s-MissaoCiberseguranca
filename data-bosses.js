@@ -47,7 +47,7 @@ export const BOSSES = [
     movementType: "patrol",  // anda devagar de um lado para o outro — nunca teletransporta, nunca desaparece
     patrolSpeed: 55,
     hopEvery: 2400,          // de vez em quando dá um pequeno salto (só visual)
-    qmarkEvery: 2200,        // atira uma bola ❓ que salta devagar pelo chão
+    qmarkEvery: 1700,        // 2200→1700: pedido "demoram muito a atirar" (ver mesmo ajuste nos outros 3 bosses, incluindo o Vírus Gigante)
     // Chão ao mesmo nível dos níveis normais (plataforma principal com topo
     // em y=506, tal como o chão de qualquer nível — ver data-levels.js) —
     // antes desta arena tinha o chão 21px mais alto (topo em y=485, igual
@@ -175,10 +175,12 @@ export const BOSSES = [
     // Math.PI/2 arranca-o antes no extremo mais longe do spawn (~690px,
     // quase 290px de distância) — ver updateBossFight em dia-crianca.js.
     wavePhaseOffset: Math.PI / 2,
-    // qmarkEvery subiu de 2900 → 3400ms (era 2400 antes disso) — como 1º
-    // boss do jogo, a criança precisa de mais tempo só para perceber o
-    // movimento em onda antes do 1º ataque a sério chegar.
-    qmarkEvery: 3400,
+    // qmarkEvery: history 2400 → 2900 → 3400 (1º boss, dava mais tempo para
+    // perceber o movimento em onda) → agora 2400 outra vez, a pedido depois
+    // de sentir que TODOS os bosses demoravam muito a atirar — ainda um
+    // pouco mais lento que os outros 3 (1600-1750ms), por continuar a ser
+    // o 1º boss do jogo.
+    qmarkEvery: 2400,
     forceFirstOrbRight: true, // pedido: o 1º ataque deste boss vai sempre para a direita — só a partir do 2º persegue mesmo o VanBerto's
     orbTexture: "boss_proj_germ", // micróbio com espigões — antes reutilizava a bola "?" do Monstro, sem sentido temático para um vírus
     // Personalidade do arremesso (ver doBossRollQmark/spawnBossGermSplit em
@@ -268,7 +270,7 @@ export const BOSSES = [
     doubleThrowAtMaxRage: true,
     movementType: "teleport",
     teleportDelay: 1700,       // mais rápido que o valor por omissão (2400) — mais difícil de prever
-    qmarkEvery: 2000,
+    qmarkEvery: 1600,          // 2000→1600: pedido "demoram muito a atirar" (ver mesmo ajuste nos outros 2 bosses "normais", em monstro_phishing e robo_spam)
     orbTexture: "boss_proj_shadow", // orbe sombrio próprio — antes reutilizava a bola "?" do Monstro só retintada, sem sentido temático para um guardião das sombras
     orbTint: 0x6a3fb5,
     // Personalidade do arremesso (ver doBossRollQmark em dia-crianca.js):
@@ -356,7 +358,7 @@ export const BOSSES = [
     movementType: "patrol",
     patrolSpeed: 150,        // mais rápido — sensação industrial
     hopEvery: 2000,
-    qmarkEvery: 2000,
+    qmarkEvery: 1750,        // 2000→1750: pedido "demoram muito a atirar" — corte mais pequeno que os outros 2, porque este já atira sempre a pares (alwaysDoubleThrow), logo já é o mais denso dos 4
     orbTexture: "boss_proj_spam", // envelope de spam com selo de aviso vermelho — o robô atira correio, não parafusos
     orbTint: 0xffffff,       // sem tint — o envelope já tem as suas próprias cores (branco/vermelho)
     // Personalidade do arremesso (ver doBossRollQmark em dia-crianca.js):
@@ -371,7 +373,14 @@ export const BOSSES = [
     // + chaminé). 506 - 26*1.5 = 467.
     bossY: 467,
     bossScale: 1.5,
-    hpBarOffset: 82,
+    // CORRIGIDO — a barra de vida sobrepunha o boss em jogo. hpBarOffset
+    // ficou em 82 desde antes da tampa+pilha de envelopes serem
+    // redesenhadas (mais altas — ver drawPoluidorBody em textures.js); nunca
+    // foi recalculado depois disso. Medido de novo o pixel mais alto
+    // desenhado (~56px acima do centro do canvas, já com a tampa/pilha
+    // corrigidas para não saírem da tela) × bossScale (1.5) ≈ 84, mais a
+    // mesma pequena folga dos outros 3 bosses → 96 (em vez de 82).
+    hpBarOffset: 96,
     signY: 486,
     // signX: centro da plataforma baixa esquerda (x=200, ver arena.platforms
     // abaixo) — mesma lógica dos outros bosses (ver comentário no Monstro

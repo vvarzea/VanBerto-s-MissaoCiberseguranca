@@ -1459,17 +1459,23 @@ function makeBossTextures(scene){
   // ilustração de referência. O emblema — um olho-que-tudo-vê bordado —
   // fica no pico, por isso continua visível acima do ecrã.
   function drawShadowHood(ctx) {
-    const grad = ctx.createLinearGradient(C - 34, 0, C + 34, 54);
+    // CORRIGIDO (achado ao medir a extensão real dos 4 bosses fora do
+    // canvas): o pico do capuz + o olho bordado ultrapassavam o topo da
+    // tela em ~5px (ficavam cortados, tal como o Robô do Spam — ver
+    // comentário em drawPoluidorBody). Toda a forma deslocada 7px para
+    // baixo (só as coordenadas verticais absolutas; C mantém-se) — cabe
+    // toda dentro da tela agora, com uma pequena folga.
+    const grad = ctx.createLinearGradient(C - 34, 7, C + 34, 61);
     grad.addColorStop(0, SH.cloakLight);
     grad.addColorStop(1, SH.cloakDark);
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(C - 33, 55);
-    ctx.quadraticCurveTo(C - 40, 24, C - 17, 6);
-    ctx.quadraticCurveTo(C - 6, -1, C + 6, -1);
-    ctx.quadraticCurveTo(C + 17, 6, C + 40, 24);
-    ctx.quadraticCurveTo(C + 33, 55, C + 20, 46);
-    ctx.quadraticCurveTo(C, 40, C - 20, 46);
+    ctx.moveTo(C - 33, 62);
+    ctx.quadraticCurveTo(C - 40, 31, C - 17, 13);
+    ctx.quadraticCurveTo(C - 6, 6, C + 6, 6);
+    ctx.quadraticCurveTo(C + 17, 13, C + 40, 31);
+    ctx.quadraticCurveTo(C + 33, 62, C + 20, 53);
+    ctx.quadraticCurveTo(C, 47, C - 20, 53);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4; ctx.stroke();
@@ -1483,11 +1489,11 @@ function makeBossTextures(scene){
     ctx.shadowColor = SH.glow; ctx.shadowBlur = 6;
     ctx.strokeStyle = SH.glow; ctx.lineWidth = 1.6; ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(C - 9, 11); ctx.quadraticCurveTo(C, 5, C + 9, 11);
-    ctx.quadraticCurveTo(C, 15, C - 9, 11);
+    ctx.moveTo(C - 9, 18); ctx.quadraticCurveTo(C, 12, C + 9, 18);
+    ctx.quadraticCurveTo(C, 22, C - 9, 18);
     ctx.stroke();
     ctx.fillStyle = SH.glow;
-    ctx.beginPath(); ctx.arc(C, 11, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(C, 18, 2.2, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 
@@ -1667,11 +1673,18 @@ function makeBossTextures(scene){
   // como convém a um robô industrial pesado.
   function drawPoluidorBody(ctx){
     bossShadow(ctx);
+    // CORRIGIDO (achado ao medir a extensão real dos 4 bosses fora do
+    // canvas, depois de reparar que a barra de vida sobrepunha o boss em
+    // jogo): a pilha de envelopes + a tampa ultrapassavam o topo da tela em
+    // ~4px — ficavam mesmo cortados (não só "encostados", como os outros
+    // bosses). Toda a pilha+tampa deslocada 4px para baixo (só as
+    // coordenadas verticais; ver también hpBarOffset em data-bosses.js,
+    // que estava desatualizado desde antes deste redesenho).
     // envelopes de spam a transbordar da tampa — mais vívidos/coloridos e
     // maiores que antes (pedido: aproximar de uma ilustração de
     // referência), para ler como "a entupir" em vez de um sussurro pálido.
-    [[C-14,C-42,-0.3,"#e8352a"],[C-2,C-48,0.15,"#fffaff"],[C+10,C-43,-0.15,"#2c5aa0"],
-     [C+2,C-53,0.35,"#fffaff"],[C-10,C-54,-0.25,"#e8352a"]].forEach(([x,y,a,col])=>{
+    [[C-14,C-38,-0.3,"#e8352a"],[C-2,C-44,0.15,"#fffaff"],[C+10,C-39,-0.15,"#2c5aa0"],
+     [C+2,C-49,0.35,"#fffaff"],[C-10,C-50,-0.25,"#e8352a"]].forEach(([x,y,a,col])=>{
       ctx.save(); ctx.translate(x,y); ctx.rotate(a);
       ctx.fillStyle=col;
       ctx.beginPath(); ctx.roundRect(-8,-6,16,11,1.5); ctx.fill();
@@ -1686,15 +1699,15 @@ function makeBossTextures(scene){
     // telhadinho plano.
     ctx.fillStyle="#c72a20";
     ctx.beginPath();
-    ctx.moveTo(C-22,C-30); ctx.lineTo(C+22,C-30); ctx.lineTo(C+15,C-45); ctx.lineTo(C-15,C-45);
+    ctx.moveTo(C-22,C-26); ctx.lineTo(C+22,C-26); ctx.lineTo(C+15,C-41); ctx.lineTo(C-15,C-41);
     ctx.closePath(); ctx.fill();
     ctx.strokeStyle="#7a140e"; ctx.lineWidth=2; ctx.stroke();
     ctx.fillStyle="#8a1a12";
-    ctx.beginPath(); ctx.moveTo(C-15,C-45); ctx.lineTo(C+15,C-45); ctx.lineTo(C+15,C-41); ctx.lineTo(C-15,C-41); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(C-15,C-41); ctx.lineTo(C+15,C-41); ctx.lineTo(C+15,C-37); ctx.lineTo(C-15,C-37); ctx.closePath(); ctx.fill();
     ctx.fillStyle="#fffaff";
-    ctx.beginPath(); ctx.roundRect(C-8,C-41,16,7,1); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(C-8,C-37,16,7,1); ctx.fill();
     // fresta escura por baixo da tampa (a "boca" por onde sai o spam)
-    ctx.fillStyle="#3a0a06"; ctx.fillRect(C-18,C-31,36,4);
+    ctx.fillStyle="#3a0a06"; ctx.fillRect(C-18,C-27,36,4);
     // corpo — caixa metálica, gradiente vermelho vivo com mais contraste
     const gr=ctx.createLinearGradient(C-30,C-22,C+30,C+26);
     gr.addColorStop(0,"#e8564a"); gr.addColorStop(0.5,"#c7291f"); gr.addColorStop(1,"#7a140e");
@@ -1800,12 +1813,14 @@ function makeBossTextures(scene){
       // CORRIGIDO (pedido: aproximar da imagem de referência do robô-caixa
       // de correio) — com side*28 (ombro) + side*23 (pulso) + até 15px de
       // lâmina de pinça, a ponta chegava a ~124px num canvas de 116px: a
-      // pinça ficava sempre cortada pela margem do ecrã. side*24/side*18 +
-      // lâminas mais curtas (11/12/-7) mantêm a mesma pose só que "encolhida"
-      // o suficiente para caber inteira dentro do canvas, com uma pequena
-      // folga.
+      // pinça ficava sempre cortada pela margem do ecrã. Medido o alcance
+      // real (fora do canvas, sem cortes): side*24/18 com lâminas 11/12/-7
+      // deixava uma folga de só ~3-5px de cada lado — pouco espaço, por
+      // isso side*25/19 com lâminas 12/13/-7 usa quase toda essa folga
+      // (chega mesmo à margem, tal como a cabeça dos outros 3 bosses, sem
+      // voltar a cortar).
       [-1,1].forEach(side=>{
-        const sx=C+side*24, sy=C-2;
+        const sx=C+side*25, sy=C-2;
         const mx=sx+side*12, my=sy-13;
         const ex=sx+side*18, ey=sy-7;
         ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";
@@ -1821,7 +1836,7 @@ function makeBossTextures(scene){
         ctx.translate(ex,ey);
         ctx.rotate(Math.atan2(ey-my, ex-mx));
         ctx.fillStyle="#4a4a52"; ctx.strokeStyle="#18181c"; ctx.lineWidth=1.6;
-        [[-0.5,11],[0.55,12],[0.05,-7]].forEach(([da,len])=>{
+        [[-0.5,12],[0.55,13],[0.05,-7]].forEach(([da,len])=>{
           ctx.save(); ctx.rotate(da);
           ctx.beginPath();
           ctx.moveTo(0,-3); ctx.lineTo(len*0.8,-1.5); ctx.lineTo(len,0); ctx.lineTo(len*0.8,1.5); ctx.lineTo(0,3);
@@ -1834,10 +1849,10 @@ function makeBossTextures(scene){
       });
     } else {
       [-1,1].forEach(side=>{
-        // side*28 → side*24: mesmo ombro do braço "wave" acima (ver
+        // side*24 → side*25: mesmo ombro do braço "wave" acima (ver
         // comentário nesse bloco) — evita um pequeno "salto" do ombro ao
         // trocar de pose entre os estados normal e este (mangas em repouso).
-        const sx=C+side*24, sy=C-2;
+        const sx=C+side*25, sy=C-2;
         const mx=sx+side*17, my=sy+13;
         const ex=sx+side*21, ey=sy+24;
         ctx.strokeStyle="#3a3a42"; ctx.lineWidth=9; ctx.lineCap="round";
